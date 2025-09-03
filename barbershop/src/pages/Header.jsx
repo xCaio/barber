@@ -4,7 +4,7 @@ import Button from "../components/Button";
 
 const Header = () => {
   return (
-    <header class="bg-header text-text font-bold shadow-2xs p-5">
+    <header class="bg-primary text-text font-bold shadow-2xs p-5">
       <div class="max-w-6xl mx-auto flex items-center justify-between">
         <img src={logo} alt="Logo do site" width="100" />
 

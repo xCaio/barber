@@ -1,11 +1,14 @@
 @import "tailwindcss";
 @theme {
-  --color-header: #100f0f;
+  --color-primary: #100f0f;
   --color-text: #d7d7d7;
   --color-button: #BD1A1A;
+  --color-secondary: #BD1A1A;
+  --color-card: #1E1E1E;
 }
-header {
-  font-family: "Anton SC", sans-serif;
-  font-weight: bold;
-  font-style: normal;
+body{
+  font-family: Airbnb Cereal VF, Circular, -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, sans-serif;
+}
+.card{
+  box-shadow: 4px 4px 1px;
 }
