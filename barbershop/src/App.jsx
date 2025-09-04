@@ -2,6 +2,7 @@ import { useState } from "react";
 import Header from "./pages/Header";
 import Home from "./pages/Home";
 import NossosServicos from "./pages/NossosServicos";
+import Sobre from "./pages/Sobre";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -10,6 +11,7 @@ function App() {
     <Header/>
     <Home/>
     <NossosServicos/>
+    <Sobre/>
   </>;
 }
 

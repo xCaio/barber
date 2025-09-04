@@ -13,8 +13,8 @@ const Home = () => {
       <div className="flex justify-center pt-31">
         <img src={logoHome} alt=" Logo da Pagina"/>
       </div>
-      <div className="flex justify-center text-text text-3xl pb-16 pt-2">
-        <h2 className="w-3xl text-center">Tradição, qualidade e estilo em cada corte. Onde a arte da barbearia encontra a excelencia</h2>
+      <div className="flex justify-center pb-16 pt-2">
+        <h2 className="text-lg md:text-3xl text-text text-center leading-normal md:leading-tight max-w-md sm:max-w-lg">Tradição, qualidade e estilo em cada corte. Onde a arte da barbearia encontra a excelencia</h2>
       </div>
 
       <div className="flex justify-center pb-52">
