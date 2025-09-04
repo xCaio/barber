@@ -17,18 +17,22 @@ const Sobre = () => {
             técnicas tradicionais com tendências modernas, utilizando apenas
             produtos premium para garantir resultados excepcionais.
           </p>
-          <div className="flex flex-col items-center space-y-6 py-5">
+          <div className="flex flex-col items-center space-y-6">
             {/* WRAPPER */}
             <div className="flex justify-between items-baseline w-full max-w-md">
               <div className="flex flex-col items-center w-min">
-                <span className="text-xl font-bold text-secondary">8+</span>
-                <p className="text-xl text-text font-bold text-center whitespace-nowrap">
+                <span className="text-xl md:text-3xl font-bold text-secondary">
+                  8+
+                </span>
+                <p className="text-sm md:text-xl text-text font-bold text-center whitespace-nowrap">
                   Anos de experiência
                 </p>
               </div>
               <div className="flex flex-col items-center w-min">
-                <span className="text-xl font-bold text-secondary">2000+</span>
-                <p className="text-xl text-text font-bold text-center whitespace-nowrap">
+                <span className="text-xl md:text-3xl font-bold text-secondary">
+                  2000+
+                </span>
+                <p className="text-sm md:text-xl text-text font-bold text-center whitespace-nowrap">
                   Clientes Satisfeitos
                 </p>
               </div>
@@ -36,14 +40,18 @@ const Sobre = () => {
 
             <div className="flex justify-between items-baseline w-full max-w-md">
               <div className="flex flex-col items-center w-min">
-                <span className="text-xl font-bold text-secondary">1</span>
-                <p className="text-xl text-text font-bold text-center whitespace-nowrap">
+                <span className="text-xl md:text-3xl font-bold text-secondary">
+                  1
+                </span>
+                <p className="text-sm md:text-xl text-text font-bold text-center whitespace-nowrap">
                   Barbeiro Especialista
                 </p>
               </div>
               <div className="flex flex-col items-center w-min">
-                <span className="text-xl font-bold text-secondary">100%</span>
-                <p className="text-xl text-text font-bold text-center whitespace-nowrap">
+                <span className="text-xl md:text-3xl font-bold text-secondary">
+                  100%
+                </span>
+                <p className="text-sm md:text-xl text-text font-bold text-center whitespace-nowrap">
                   Dedicação Profissional
                 </p>
               </div>
