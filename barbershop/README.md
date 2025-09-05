@@ -1,57 +1,45 @@
-1. Introdução ao Projeto
+# Barbearia Garcia – Landing Page
 
-Barbearia Garcia Landing Page
-Este projeto é uma landing page moderna, responsiva e otimizada, feita com React e inicializada com Vite. A estilização foi implementada com TailwindCSS, garantindo agilidade no desenvolvimento e facilidade para manutenção futura.
+Uma **landing page moderna, responsiva e otimizada**, construída com **React** (via Vite) e estilizada com **TailwindCSS**. Apresenta de forma atrativa os serviços, a equipe e a localização da Barbearia Garcia, com foco na conversão de visitantes em clientes — seja por agendamento online ou contato direto.
 
-A landing page tem como objetivo principal apresentar a Barbearia Garcia, seus serviços, equipe e localização, com foco em conversão de visitantes em clientes — seja através de agendamento online ou contato direto.
+---
 
-2. Tecnologias Utilizadas
+## Índice
 
-React: Biblioteca JavaScript para construção de interfaces de usuário.
+- [Destaques](#destaques)  
+- [Tecnologias](#tecnologias)  
+- [Estrutura do Projeto](#estrutura-do-projeto)  
+---
 
-Vite: Ferramenta de build rápida e moderna, ideal para desenvolvimento com React.
+## Destaques
 
-TailwindCSS: Framework utilitário CSS para estilização responsiva e eficiente.
+- **Experiência moderna e fluida**: layout responsivo que se adapta bem a qualquer dispositivo.  
+- **Performance otimizada**: uso de Vite e React para carregamento rápido e reatividade.  
+- **Estilização clean e bem organizada**: com o poder e agilidade do TailwindCSS.
 
-3. Estrutura do Projeto
+---
+
+## Tecnologias
+
+- **React** – Interface declarativa em JavaScript para construção de componentes reutilizáveis.  
+- **Vite** – Ferramenta de desenvolvimento com grande performance, ideal para apps React.  
+- **TailwindCSS** – Framework utilitário que facilita ajustes estilísticos rápidos e consistentes.
+
+---
+
+## Estrutura do Projeto
+
+```text
 barbearia-garcia/
 ├── node_modules/
 ├── public/
 │   └── index.html
 ├── src/
-│   ├── assets/           # Imagens e ícones da barbearia
-│   ├── components/       # Componentes reutilizáveis (Header, Footer, Hero, ... )
-│   ├── pages/            # Componentes de página (Main landing)
-│   ├── App.jsx           # Componente principal
-│   └── main.jsx          # Entrada da aplicação
-├── tailwind.config.js    # Configurações do TailwindCSS
-├── package.json
-└── vite.config.js        # Configurações do Vite
-
-4. Estrutura dos Arquivos e Boas Práticas
-
-src/components/: organize componentes reutilizáveis como Button.jsx, ButtonSecondary.jsx, Card.jsx, etc.
-
-tailwind.config.js: personalize a paleta de cores, fontes e espaçamentos de acordo com a identidade visual da Barbearia Garcia:
-
-// tailwind.config.js
-module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
-  theme: {
-    extend: {
-      backgroundImage: {
-        'home-bg': "url('../src/assets/background.jpg')"
-      },
-    },
-  },
-  plugins: [],
-};
-
-5. Teste Final
-Chegando ao último passo:
-
-- Ao rodar npm run dev, confirme visualmente no navegador:
-    - Responsividade: use o DevTools (F12) para testar em diferentes dispositivos—desktop, tablet, mobile.  
-    - Componentes interativos: botões, links, formulários devem funcionar normalmente.
-    - Estilo consistente com a identidade visual da barbearia.
-    - Performance: carregamento rápido e fluidez no scroll e interações.
+│   ├── assets/           # Imagens, ícones e backgrounds
+│   ├── components/       # Componentes reutilizáveis (Header, Hero, Button, etc.)
+│   ├── pages/            # Componentes de página (Landing principal)
+│   ├── App.jsx           # Componente principal da aplicação
+│   └── main.jsx          # Ponto de entrada do React/Vite
+├── tailwind.config.js    # Customizações do Tailwind (cores, imagens, temas)
+├── vite.config.js        # Configurações de build e dev do Vite
+└── package.json          # Dependências e scripts do projeto
