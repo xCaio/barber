@@ -7,7 +7,7 @@ import ButtonSecondary from "../components/ButtonSecondary";
 const Home = () => {
   return (
     <section
-      className="bg-cover bg-center h-full w-full"
+      className="bg-cover bg-center h-full w-full bg-primary"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="flex justify-center pt-31">
