@@ -10,7 +10,7 @@ const Header = () => {
   };
 
   return (
-    <header class="bg-primary text-text font-bold shadow-2xs p-5">
+    <header class="fixed z-20 w-full justify-between mx-auto bg-primary text-text font-bold shadow-2xs p-5 ">
       <div class="max-w-6xl mx-auto flex items-center justify-between">
         <img src={logo} alt="Logo do site" width="100" />
 
@@ -32,13 +32,13 @@ const Header = () => {
         </button>
 
         <nav class="hidden sm:flex items-center space-x-10">
-          <a href="#" class="hover:underline">
+          <a href="#servicos" class="hover:underline">
             Serviços
           </a>
-          <a href="#" class="hover:underline">
+          <a href="#sobre" class="hover:underline">
             Sobre
           </a>
-          <a href="#" class="hover:underline">
+          <a href="#contato" class="hover:underline">
             Contato
           </a>
           <Button />
@@ -68,13 +68,13 @@ const Header = () => {
               />
             </svg>
           </button>
-          <a href="#" className="block hover:underline">
+          <a href="#servicos" className="block hover:underline">
             Serviços
           </a>
-          <a href="#" className="block hover:underline">
+          <a href="#sobre" className="block hover:underline">
             Sobre
           </a>
-          <a href="#" className="block hover:underline">
+          <a href="#contato" className="block hover:underline">
             Contato
           </a>
           <Button />

@@ -6,9 +6,16 @@
   --color-secondary: #BD1A1A;
   --color-card: #1E1E1E;
 }
+*{
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+}
 body{
   font-family: Airbnb Cereal VF, Circular, -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, sans-serif;
 }
 .card{
   box-shadow: 4px 4px 1px;
+}
+html {
+  
 }

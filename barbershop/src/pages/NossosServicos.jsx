@@ -54,7 +54,7 @@ const services = [
   ];
 
   return (
-    <section className="pt-12 bg-primary w-full px-4">
+    <section id="servicos" className="pt-12 bg-primary w-full px-4">
       <div className="flex flex-col text-center mb-10">
         <h2 className="text-4xl sm:text-4xl md:text-6xl font-bold text-secondary pb-4">
           Nossos Serviços

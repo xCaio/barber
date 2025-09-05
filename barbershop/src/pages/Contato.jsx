@@ -2,7 +2,7 @@ import React from "react";
 
 const Contato = () => {
   return (
-    <section className="pt-12 bg-primary w-full">
+    <section id="contato" className="pt-12 bg-primary w-full">
       <h2 className="text-4xl text-center sm:text-4xl md:text-6xl font-bold text-secondary pb-6">
         Contato & Localização
       </h2>
@@ -116,7 +116,7 @@ const Contato = () => {
           Redes Sociais
         </h3>
         <div className="flex justify-between py-4 gap-5">
-          <a href="#">
+          <a href="https://www.instagram.com/barbearia__garcia" target="_blank">
             <svg
               width="800px"
               height="800px"
@@ -181,7 +181,7 @@ const Contato = () => {
               />
             </svg>
           </a>
-          <a href="#">
+          <a href="https://www.google.com/maps/place/Av.+A,+343+-+Mangueiras,+Belo+Horizonte+-+MG,+30666-420/@-20.0183182,-44.0332516,899m/data=!3m2!1e3!4b1!4m6!3m5!1s0xa6bea342548c9d:0x37af0ac07d26271b!8m2!3d-20.0183183!4d-44.028386!16s%2Fg%2F11fz9z6ccd?entry=ttu&g_ep=EgoyMDI1MDkwMy4wIKXMDSoASAFQAw%3D%3D" target="_blank">
             <svg
               width="800px"
               height="800px"

@@ -3,7 +3,7 @@ import imgCortes from "../assets/imgCortes.png";
 
 const Sobre = () => {
   return (
-    <section className="pt-12 bg-primary w-full">
+    <section id="sobre" className="pt-12 bg-primary w-full">
       <div className="flex flex-col md:flex-row items-start px-4 md:px-10 pt-10 gap-8">
         <div className="flex-1">
           <h2 className="text-4xl text-center sm:text-4xl md:text-6xl font-bold text-secondary pb-6">
