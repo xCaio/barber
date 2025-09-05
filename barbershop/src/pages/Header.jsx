@@ -12,7 +12,9 @@ const Header = () => {
   return (
     <header class="fixed z-20 w-full justify-between mx-auto bg-primary text-text font-bold shadow-2xs p-5 ">
       <div class="max-w-6xl mx-auto flex items-center justify-between">
-        <img src={logo} alt="Logo do site" width="100" />
+        <a href="#" className="cursor-pointer">
+          <img src={logo} alt="Logo do site" width="100" />
+        </a>
 
         <button className="sm:hidden cursor-pointer" onClick={toggleSidebar}>
           <svg
@@ -52,7 +54,10 @@ const Header = () => {
       >
         <div className="p-5 flex flex-col space-y-4">
           {/* BOTÃO FECHAR */}
-          <button className="self-end mb-4 cursor-pointer" onClick={toggleSidebar}> 
+          <button
+            className="self-end mb-4 cursor-pointer"
+            onClick={toggleSidebar}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
