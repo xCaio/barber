@@ -34,13 +34,13 @@ const Header = () => {
         </button>
 
         <nav class="hidden sm:flex items-center space-x-10">
-          <a href="#servicos" class="hover:underline">
+          <a href="#servicos" class="border-transparent hover:border-b-3 hover:border-secondary duration-100">
             Serviços
           </a>
-          <a href="#sobre" class="hover:underline">
+          <a href="#sobre" class="border-transparent hover:border-b-3 hover:border-secondary duration-150">
             Sobre
           </a>
-          <a href="#contato" class="hover:underline">
+          <a href="#contato" class="border-transparent hover:border-b-3 hover:border-secondary duration-150">
             Contato
           </a>
           <Button />
@@ -73,13 +73,13 @@ const Header = () => {
               />
             </svg>
           </button>
-          <a href="#servicos" className="block hover:underline">
+          <a href="#servicos" className="block w-fit border-transparent hover:border-b-3 hover:border-secondary duration-100">
             Serviços
           </a>
-          <a href="#sobre" className="block hover:underline">
+          <a href="#sobre" className="block w-fit border-transparent hover:border-b-3 hover:border-secondary duration-100">
             Sobre
           </a>
-          <a href="#contato" className="block hover:underline">
+          <a href="#contato" className="block w-fit border-transparent hover:border-b-3 hover:border-secondary duration-100">
             Contato
           </a>
           <Button />
