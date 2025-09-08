@@ -64,7 +64,7 @@ const Sobre = () => {
           <img
             src={imgCortes}
             alt="Foto dos cortes"
-            className="w-full sm:max-w-sm md:max-w-md h-auto mx-auto"
+            className="w-full sm:max-w-sm md:max-w-md h-auto mx-auto lg:pr-24"
           />
         </div>
       </div>

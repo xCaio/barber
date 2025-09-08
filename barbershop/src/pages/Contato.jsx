@@ -2,7 +2,7 @@ import React from "react";
 
 const Contato = () => {
   return (
-    <section id="contato" className="pt-12 bg-primary w-full">
+    <section id="contato" className="py-12 bg-primary w-full">
       <h2 className="text-4xl text-center sm:text-4xl md:text-6xl font-bold text-secondary pb-6">
         Contato & Localização
       </h2>
@@ -85,7 +85,7 @@ const Contato = () => {
 
             <div className="mx-3">
               <p className="font-bold text-text">Email</p>
-              <p className="font-bold text-text">contato@barbershop.com</p>
+              <p className="font-bold text-text">contato@barbeariagarcia.com</p>
             </div>
           </div>
         </div>
@@ -160,7 +160,7 @@ const Contato = () => {
               />
             </svg>
           </a>
-          <a href="#">
+          <a href="https://api.whatsapp.com/send/?phone=%2B5531995925295&text=Ol%C3%A1%2C+gostaria+de+agendar+um+hor%C3%A1rio+com+voc%C3%AA%21&type=phone_number&app_absent=0" target="_blank">
             <svg
               width="800px"
               height="800px"
