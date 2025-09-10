@@ -1,7 +1,5 @@
-import React from "react";
-import logo from "../assets/logo.png";
 import logoHome from "../assets/logoHome.png";
-import bgImage from "../assets/background.jpg";
+import bgImage from "../assets/background.png";
 import Button from "../components/Button";
 import ButtonSecondary from "../components/ButtonSecondary";
 const Home = () => {
