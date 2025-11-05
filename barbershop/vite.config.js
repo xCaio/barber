@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  root: 'barber',
   plugins: [react(), tailwindcss()],
-  base: 'barber'
+  base: '/'
 })
