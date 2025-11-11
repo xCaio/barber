@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  root: 'barbershop',     
+  root: './barbershop',     
   base: '/',              
   build: {
     outDir: './dist',    
