@@ -1,20 +1,33 @@
-import Header from "./pages/Header";
-import Home from "./pages/Home";
-import NossosServicos from "./pages/NossosServicos";
-import Sobre from "./pages/Sobre";
-import Contato from "./pages/Contato";
-import Footer from "./pages/Footer";
+import { useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
+import AppRouter from './routes/AppRouter';
+import ErrorBoundary from './components/ui/ErrorBoundary';
+import FirebaseBanner from './components/ui/FirebaseBanner';
+import { useAuthStore } from './store/authStore';
 
 function App() {
+  const initAuth = useAuthStore((s) => s.initAuth);
 
-  return <>
-    <Header/>
-    <Home/>
-    <NossosServicos/>
-    <Sobre/>
-    <Contato/>
-    <Footer/>
-  </>;
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
+  return (
+    <ErrorBoundary>
+      <FirebaseBanner />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#1E1E1E',
+            color: '#d7d7d7',
+            border: '1px solid #BD1A1A',
+          },
+        }}
+      />
+      <AppRouter />
+    </ErrorBoundary>
+  );
 }
 
 export default App;

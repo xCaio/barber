@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import logo from "../assets/logo.png";
+import { Link } from "react-router-dom";
 import Button from "../components/Button";
 
 const Header = () => {
@@ -12,9 +13,9 @@ const Header = () => {
   return (
     <header class="fixed z-20 w-full justify-between mx-auto bg-primary text-text font-bold shadow-2xs p-5 ">
       <div class="max-w-6xl mx-auto flex items-center justify-between">
-        <a href="#" className="cursor-pointer">
+        <Link to="/" className="cursor-pointer">
           <img src={logo} alt="Logo do site" width="100" />
-        </a>
+        </Link>
 
         <button className="sm:hidden cursor-pointer" onClick={toggleSidebar}>
           <svg

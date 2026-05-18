@@ -1,45 +1,48 @@
-# Barbearia Garcia – Landing Page
+# Barbearia — Sistema de Agendamento Online
 
-Uma **landing page moderna, responsiva e otimizada**, construída com **React** (via Vite) e estilizada com **TailwindCSS**. Apresenta de forma atrativa os serviços, a equipe e a localização da Barbearia Garcia, com foco na conversão de visitantes em clientes — seja por agendamento online ou contato direto.
+Sistema completo de agendamento para barbearia com React, Firebase e interface premium.
 
----
+## Funcionalidades
 
-## Índice
+**Cliente:** escolher barbeiro, serviço, data/hora em tempo real, agendar, cancelar, reagendar, histórico.
 
-- [Destaques](#destaques)  
-- [Tecnologias](#tecnologias)  
-- [Estrutura do Projeto](#estrutura-do-projeto)  
----
+**Admin/Barbeiro:** dashboard, calendário semanal, gestão de agendamentos, serviços, folgas, almoço e bloqueios.
 
-## Destaques
+## Início rápido
 
-- **Experiência moderna e fluida**: layout responsivo que se adapta bem a qualquer dispositivo.  
-- **Performance otimizada**: uso de Vite e React para carregamento rápido e reatividade.  
-- **Estilização clean e bem organizada**: com o poder e agilidade do TailwindCSS.
+```bash
+npm install
+cp .env.example .env
+# Preencha as variáveis Firebase no .env
+npm run dev
+```
 
----
+## Firebase
 
-## Tecnologias
+1. Crie projeto no Firebase Console
+2. Ative Authentication (e-mail/senha)
+3. Crie Firestore
+4. Configure `.env` com as credenciais do app web
+5. Deploy das regras: `npm run firebase:rules`
+6. Cadastre barbeiros e serviços no Firestore (veja `docs/ARQUITETURA.md`)
+7. Após criar sua conta, altere `role` para `admin` no documento `users/{seu-uid}`
 
-- **React** – Interface declarativa em JavaScript para construção de componentes reutilizáveis.  
-- **Vite** – Ferramenta de desenvolvimento com grande performance, ideal para apps React.  
-- **TailwindCSS** – Framework utilitário que facilita ajustes estilísticos rápidos e consistentes.
+## Deploy
 
----
+```bash
+npm run firebase:deploy
+```
 
-## Estrutura do Projeto
+## Documentação
 
-```text
-barbearia-garcia/
-├── node_modules/
-├── public/
-│   └── index.html
-├── src/
-│   ├── assets/           # Imagens, ícones e backgrounds
-│   ├── components/       # Componentes reutilizáveis (Header, Hero, Button, etc.)
-│   ├── pages/            # Componentes de página (Landing principal)
-│   ├── App.jsx           # Componente principal da aplicação
-│   └── main.jsx          # Ponto de entrada do React/Vite
-├── tailwind.config.js    # Customizações do Tailwind (cores, imagens, temas)
-├── vite.config.js        # Configurações de build e dev do Vite
-└── package.json          # Dependências e scripts do projeto
+Arquitetura completa, modelagem Firestore e fluxos: [docs/ARQUITETURA.md](docs/ARQUITETURA.md)
+
+## Rotas
+
+| Rota | Descrição |
+|------|-----------|
+| `/` | Site institucional |
+| `/agendar` | Fluxo de agendamento |
+| `/meus-agendamentos` | Histórico do cliente |
+| `/login` `/register` | Autenticação |
+| `/admin` | Painel administrativo |
