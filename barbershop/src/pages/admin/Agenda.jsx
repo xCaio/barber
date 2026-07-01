@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getActiveBarbers } from '../../services/barberService';
 import { getAppointmentsByDateRange } from '../../services/appointmentService';
 import { toDate, formatTime } from '../../utils/dateUtils';
@@ -40,17 +41,40 @@ export default function AdminAgenda() {
       .finally(() => setLoading(false));
   }, [barberId, weekStart]);
 
-  const getForDay = (day) =>
-    appointments.filter((a) => isSameDay(toDate(a.startAt), day));
+  const getForDay = (day) => appointments.filter((a) => isSameDay(toDate(a.startAt), day));
+
+  const weekLabel = `${format(weekDays[0], 'dd/MM')} – ${format(weekDays[6], 'dd/MM/yyyy')}`;
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-secondary">Calendário</h1>
-        <div className="flex gap-2">
-          <button type="button" onClick={() => setWeekStart(addDays(weekStart, -7))} className="px-3 py-2 bg-card rounded-lg cursor-pointer">← Semana</button>
-          <button type="button" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))} className="px-3 py-2 bg-card rounded-lg cursor-pointer">Hoje</button>
-          <button type="button" onClick={() => setWeekStart(addDays(weekStart, 7))} className="px-3 py-2 bg-card rounded-lg cursor-pointer">Semana →</button>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-secondary">Calendário</h1>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p className="text-gray-400 text-sm">{weekLabel}</p>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setWeekStart(addDays(weekStart, -7))}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-2.5 bg-card border border-gray-800 rounded-xl text-sm cursor-pointer hover:border-gray-600"
+            >
+              <ChevronLeft size={16} /> Anterior
+            </button>
+            <button
+              type="button"
+              onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+              className="flex-1 sm:flex-none px-4 py-2.5 bg-secondary rounded-xl text-sm font-medium cursor-pointer"
+            >
+              Hoje
+            </button>
+            <button
+              type="button"
+              onClick={() => setWeekStart(addDays(weekStart, 7))}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-2.5 bg-card border border-gray-800 rounded-xl text-sm cursor-pointer hover:border-gray-600"
+            >
+              Próxima <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -59,45 +83,87 @@ export default function AdminAgenda() {
         value={barberId}
         onChange={(e) => setBarberId(e.target.value)}
         options={barbers.map((b) => ({ value: b.id, label: b.name }))}
-        className="mb-6 max-w-xs"
+        className="w-full sm:max-w-xs"
       />
 
       {loading ? (
         <Loading />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
-          {weekDays.map((day) => {
-            const dayAppts = getForDay(day);
-            const isToday = isSameDay(day, new Date());
-            return (
-              <div
-                key={day.toISOString()}
-                className={`bg-card rounded-xl border p-3 min-h-[200px] ${isToday ? 'border-secondary' : 'border-gray-800'}`}
-              >
-                <p className={`font-bold text-sm mb-3 capitalize ${isToday ? 'text-secondary' : 'text-text'}`}>
-                  {format(day, 'EEE dd/MM', { locale: ptBR })}
-                </p>
-                <div className="space-y-2">
+        <>
+          {/* Mobile: lista vertical por dia */}
+          <div className="md:hidden space-y-3">
+            {weekDays.map((day) => {
+              const dayAppts = getForDay(day);
+              const isToday = isSameDay(day, new Date());
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={`bg-card rounded-xl border p-4 ${isToday ? 'border-secondary' : 'border-gray-800'}`}
+                >
+                  <p className={`font-bold text-sm mb-3 capitalize ${isToday ? 'text-secondary' : 'text-text'}`}>
+                    {format(day, "EEEE, dd/MM", { locale: ptBR })}
+                  </p>
                   {dayAppts.length === 0 ? (
-                    <p className="text-gray-600 text-xs">—</p>
+                    <p className="text-gray-600 text-xs">Sem agendamentos</p>
                   ) : (
-                    dayAppts.map((a) => (
-                      <div
-                        key={a.id}
-                        className={`text-xs p-2 rounded-lg border ${STATUS_COLORS[a.status] || STATUS_COLORS[APPOINTMENT_STATUS.SCHEDULED]}`}
-                      >
-                        <p className="font-bold">{formatTime(a.startAt)}</p>
-                        <p className="truncate">{a.clientName}</p>
-                        <p className="truncate opacity-80">{a.serviceName}</p>
-                      </div>
-                    ))
+                    <div className="space-y-2">
+                      {dayAppts.map((a) => (
+                        <AppointmentChip key={a.id} appointment={a} />
+                      ))}
+                    </div>
                   )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+
+          {/* Tablet+: grid semanal com scroll horizontal em telas médias */}
+          <div className="hidden md:block overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="grid grid-cols-7 gap-2 lg:gap-3 min-w-[640px] lg:min-w-0">
+              {weekDays.map((day) => {
+                const dayAppts = getForDay(day);
+                const isToday = isSameDay(day, new Date());
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className={`bg-card rounded-xl border p-2 lg:p-3 min-h-[160px] lg:min-h-[200px] ${
+                      isToday ? 'border-secondary' : 'border-gray-800'
+                    }`}
+                  >
+                    <p className={`font-bold text-xs lg:text-sm mb-2 capitalize truncate ${isToday ? 'text-secondary' : 'text-text'}`}>
+                      {format(day, 'EEE dd/MM', { locale: ptBR })}
+                    </p>
+                    <div className="space-y-1.5">
+                      {dayAppts.length === 0 ? (
+                        <p className="text-gray-600 text-xs">—</p>
+                      ) : (
+                        dayAppts.map((a) => (
+                          <AppointmentChip key={a.id} appointment={a} compact />
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
       )}
+    </div>
+  );
+}
+
+function AppointmentChip({ appointment: a, compact = false }) {
+  return (
+    <div
+      className={`${compact ? 'text-[10px] lg:text-xs p-1.5 lg:p-2' : 'text-xs p-2.5'} rounded-lg border ${
+        STATUS_COLORS[a.status] || STATUS_COLORS[APPOINTMENT_STATUS.SCHEDULED]
+      }`}
+    >
+      <p className="font-bold">{formatTime(a.startAt)}</p>
+      <p className="truncate">{a.clientName}</p>
+      {!compact && <p className="truncate opacity-80">{a.serviceName}</p>}
+      {compact && <p className="truncate opacity-80 hidden lg:block">{a.serviceName}</p>}
     </div>
   );
 }

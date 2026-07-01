@@ -1,12 +1,10 @@
 import {
   collection,
   getDocs,
-  addDoc,
-  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { DEFAULT_WORKING_HOURS, DEFAULT_LUNCH_BREAK } from '../constants';
-import { createBarber } from './barberService';
+import { createBarber, updateBarber } from './barberService';
 import { createService } from './serviceService';
 
 const DEFAULT_BARBER = {
@@ -15,7 +13,7 @@ const DEFAULT_BARBER = {
   active: true,
 };
 
-const DEFAULT_SERVICES = [
+export const DEFAULT_SERVICES = [
   { name: 'Corte Masculino', description: 'Corte personalizado com acabamento perfeito.', price: 25, durationMinutes: 45, order: 1 },
   { name: 'Barba Completa', description: 'Aparar, modelar e finalizar sua barba.', price: 10, durationMinutes: 20, order: 2 },
   { name: 'Combo Completo', description: 'Corte + barba + sobrancelhas.', price: 45, durationMinutes: 50, order: 3 },
@@ -40,7 +38,7 @@ export async function seedInitialData() {
   const barbersSnap = await getDocs(collection(db, 'barbers'));
   const servicesSnap = await getDocs(collection(db, 'services'));
 
-  const results = { barber: null, services: 0 };
+  const results = { barber: null, services: 0, barberUpdated: false };
 
   if (barbersSnap.empty) {
     await createBarber({
@@ -50,10 +48,26 @@ export async function seedInitialData() {
       weeklySchedule: buildDefaultWeeklySchedule(),
     });
     results.barber = DEFAULT_BARBER.name;
+  } else {
+    for (const docSnap of barbersSnap.docs) {
+      const data = docSnap.data();
+      if (!data.workingHours || !data.lunchBreak) {
+        await updateBarber(docSnap.id, {
+          workingHours: data.workingHours || DEFAULT_WORKING_HOURS,
+          lunchBreak: data.lunchBreak || DEFAULT_LUNCH_BREAK,
+          weeklySchedule: data.weeklySchedule || buildDefaultWeeklySchedule(),
+        });
+        results.barberUpdated = true;
+      }
+    }
   }
 
-  if (servicesSnap.empty) {
-    for (const service of DEFAULT_SERVICES) {
+  const existingNames = new Set(
+    servicesSnap.docs.map((d) => (d.data().name || '').toLowerCase().trim())
+  );
+
+  for (const service of DEFAULT_SERVICES) {
+    if (!existingNames.has(service.name.toLowerCase())) {
       await createService(service);
       results.services += 1;
     }

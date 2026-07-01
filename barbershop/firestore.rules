@@ -25,6 +25,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Cliente pode cancelar ou reagendar o próprio agendamento (sem alterar serviço/preço).
+    function isClientOwnAppointmentUpdate() {
+      return resource.data.clientId == request.auth.uid
+        && request.resource.data.clientId == resource.data.clientId
+        && request.resource.data.barberId == resource.data.barberId
+        && request.resource.data.serviceId == resource.data.serviceId
+        && request.resource.data.serviceName == resource.data.serviceName
+        && request.resource.data.price == resource.data.price
+        && request.resource.data.durationMinutes == resource.data.durationMinutes
+        && request.resource.data.status in ['agendado', 'cancelado'];
+    }
+
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow create: if isSignedIn()
@@ -50,19 +62,17 @@ service cloud.firestore {
     }
 
     match /appointments/{appointmentId} {
+      // Agendamentos ativos são legíveis por clientes autenticados (cálculo de horários).
       allow read: if isSignedIn() && (
         isAdmin() ||
-        resource.data.clientId == request.auth.uid
+        resource.data.clientId == request.auth.uid ||
+        resource.data.status == 'agendado'
       );
       allow create: if isSignedIn() && (
         request.resource.data.clientId == request.auth.uid ||
         isAdmin()
       );
-      allow update: if isSignedIn() && (
-        isAdmin() ||
-        (resource.data.clientId == request.auth.uid &&
-         request.resource.data.status == 'cancelado')
-      );
+      allow update: if isSignedIn() && (isAdmin() || isClientOwnAppointmentUpdate());
       allow delete: if isAdmin();
     }
   }

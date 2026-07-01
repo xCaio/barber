@@ -7,12 +7,9 @@ import { ROLES } from '../constants';
 export const useAuthStore = create((set, get) => ({
   user: null,
   profile: null,
-  loading: false,
+  loading: true,
+  profileLoading: false,
   initialized: false,
-
-  setUser: (user) => set({ user }),
-  setProfile: (profile) => set({ profile }),
-  setLoading: (loading) => set({ loading }),
 
   isAdmin: () => {
     const role = get().profile?.role;
@@ -29,35 +26,34 @@ export const useAuthStore = create((set, get) => ({
       return;
     }
 
-    set({ loading: true });
+    onAuthStateChanged(auth, (user) => {
+      set({ user, loading: false, initialized: true });
 
-    onAuthStateChanged(auth, async (user) => {
-      set({ user, loading: true });
       if (user) {
-        try {
-          const profile = await getUserProfile(user.uid);
-          set({ profile });
-        } catch {
-          set({ profile: null });
-        }
+        set({ profileLoading: true });
+        getUserProfile(user.uid)
+          .then((profile) => set({ profile, profileLoading: false }))
+          .catch(() => set({ profile: null, profileLoading: false }));
       } else {
-        set({ profile: null });
+        set({ profile: null, profileLoading: false });
       }
-      set({ loading: false, initialized: true });
     });
-
-    set({ initialized: true });
   },
 
   logout: async () => {
     await logoutUser();
-    set({ user: null, profile: null });
+    set({ user: null, profile: null, profileLoading: false });
   },
 
   refreshProfile: async () => {
     const { user } = get();
     if (!user) return;
-    const profile = await getUserProfile(user.uid);
-    set({ profile });
+    set({ profileLoading: true });
+    try {
+      const profile = await getUserProfile(user.uid);
+      set({ profile, profileLoading: false });
+    } catch {
+      set({ profile: null, profileLoading: false });
+    }
   },
 }));

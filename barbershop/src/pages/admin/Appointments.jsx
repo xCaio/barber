@@ -67,31 +67,47 @@ export default function AdminAppointments() {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-secondary">Agendamentos</h1>
-        <Button onClick={() => setModal('create')}>+ Novo agendamento</Button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-secondary">Agendamentos</h1>
+        <Button onClick={() => setModal('create')} className="w-full sm:w-auto shrink-0">
+          + Novo agendamento
+        </Button>
       </div>
 
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_auto_auto] gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Select
           label="Barbeiro"
           value={barberId}
           onChange={(e) => setBarberId(e.target.value)}
           options={barbers.map((b) => ({ value: b.id, label: b.name }))}
-          className="min-w-[180px]"
+          className="w-full"
         />
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Data</label>
+        <div className="w-full">
+          <label className="block text-sm text-gray-400 mb-1.5">Data</label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="px-4 py-2.5 rounded-xl bg-card border border-gray-700 text-text"
+            className="w-full px-4 py-2.5 rounded-xl bg-card border border-gray-700 text-text"
           />
         </div>
-        <div className="flex items-end gap-2">
-          <button type="button" onClick={() => setDate(format(addDays(new Date(date + 'T12:00:00'), -1), DATE_FORMAT))} className="px-3 py-2 bg-card rounded-lg cursor-pointer">←</button>
-          <button type="button" onClick={() => setDate(format(addDays(new Date(date + 'T12:00:00'), 1), DATE_FORMAT))} className="px-3 py-2 bg-card rounded-lg cursor-pointer">→</button>
+        <div className="flex items-end gap-2 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => setDate(format(addDays(new Date(date + 'T12:00:00'), -1), DATE_FORMAT))}
+            className="flex-1 sm:flex-none px-4 py-2.5 bg-card border border-gray-800 rounded-xl cursor-pointer hover:border-gray-600"
+            aria-label="Dia anterior"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            onClick={() => setDate(format(addDays(new Date(date + 'T12:00:00'), 1), DATE_FORMAT))}
+            className="flex-1 sm:flex-none px-4 py-2.5 bg-card border border-gray-800 rounded-xl cursor-pointer hover:border-gray-600"
+            aria-label="Próximo dia"
+          >
+            →
+          </button>
         </div>
       </div>
 
@@ -102,22 +118,32 @@ export default function AdminAppointments() {
       ) : (
         <div className="space-y-3">
           {appointments.map((a) => (
-            <div key={a.id} className="bg-card rounded-xl border border-gray-800 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <p className="font-bold text-text">{formatTime(a.startAt)} — {a.clientName}</p>
-                <p className="text-sm text-gray-400">{a.serviceName} • R$ {a.price?.toFixed(2)} • {a.durationMinutes}min</p>
-                <p className="text-xs text-gray-500">{a.clientPhone || a.clientEmail}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
+            <div key={a.id} className="bg-card rounded-xl border border-gray-800 p-4 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-bold text-text text-sm sm:text-base truncate">
+                    {formatTime(a.startAt)} — {a.clientName}
+                  </p>
+                  <p className="text-xs sm:text-sm text-gray-400">
+                    {a.serviceName} • R$ {a.price?.toFixed(2)} • {a.durationMinutes}min
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{a.clientPhone || a.clientEmail}</p>
+                </div>
                 <StatusBadge status={a.status} />
-                {a.status === APPOINTMENT_STATUS.SCHEDULED && (
-                  <>
-                    <Button size="sm" variant="secondary" onClick={() => setModal({ type: 'reschedule', appointment: a })}>Reagendar</Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleStatus(a.id, APPOINTMENT_STATUS.COMPLETED)}>Concluir</Button>
-                    <Button size="sm" variant="danger" onClick={() => handleCancel(a.id)}>Cancelar</Button>
-                  </>
-                )}
               </div>
+              {a.status === APPOINTMENT_STATUS.SCHEDULED && (
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-2 border-t border-gray-800">
+                  <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={() => setModal({ type: 'reschedule', appointment: a })}>
+                    Reagendar
+                  </Button>
+                  <Button size="sm" variant="ghost" className="w-full sm:w-auto" onClick={() => handleStatus(a.id, APPOINTMENT_STATUS.COMPLETED)}>
+                    Concluir
+                  </Button>
+                  <Button size="sm" variant="danger" className="w-full sm:w-auto" onClick={() => handleCancel(a.id)}>
+                    Cancelar
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -187,7 +213,7 @@ function CreateAppointmentModal({ barbers, barberId, date, onClose, onSuccess })
         <Input label="Nome do cliente" value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} />
         <Input label="Telefone" value={form.clientPhone} onChange={(e) => setForm({ ...form, clientPhone: e.target.value })} />
         <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value, slot: null })} className="w-full px-4 py-2 rounded-xl bg-primary border border-gray-700 text-text" />
-        <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 max-h-48 overflow-y-auto">
           {slots.map((s) => (
             <button key={s.label} type="button" onClick={() => setForm({ ...form, slot: s })} className={`py-2 rounded-lg border text-sm cursor-pointer ${form.slot?.label === s.label ? 'border-secondary bg-secondary' : 'border-gray-700'}`}>{s.label}</button>
           ))}
@@ -220,7 +246,7 @@ function RescheduleModal({ appointment, onClose, onSuccess }) {
   return (
     <Modal isOpen onClose={onClose} title={`Reagendar — ${appointment.clientName}`}>
       <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full px-4 py-2 rounded-xl bg-primary border border-gray-700 text-text mb-4" />
-      <div className="grid grid-cols-4 gap-2 mb-4 max-h-40 overflow-y-auto">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mb-4 max-h-48 overflow-y-auto">
         {slots.map((s) => (
           <button key={s.label} type="button" onClick={() => setSelected(s)} className={`py-2 rounded-lg border text-sm cursor-pointer ${selected?.label === s.label ? 'border-secondary bg-secondary' : 'border-gray-700'}`}>{s.label}</button>
         ))}
