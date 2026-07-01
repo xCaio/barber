@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Calendar, X, RefreshCw, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Calendar, X, RefreshCw, MessageCircle, Clock, User, CalendarPlus } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import {
   getClientAppointments,
@@ -11,6 +12,8 @@ import {
 import { APPOINTMENT_STATUS, WHATSAPP_BASE_URL } from '../../constants';
 import { formatDate, formatTime, toDate, DATE_FORMAT } from '../../utils/dateUtils';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import ClientPageShell from '../../components/layout/ClientPageShell';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Button from '../../components/ui/Button';
 import Loading from '../../components/ui/Loading';
@@ -97,54 +100,79 @@ export default function MyAppointments() {
   if (loading) return <Loading fullScreen />;
 
   return (
-    <div className="min-h-screen bg-primary pt-24 pb-16 px-4">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-secondary mb-8">Meus Agendamentos</h1>
-
-        <section className="mb-10">
-          <h2 className="text-lg font-bold text-text mb-4 flex items-center gap-2">
-            <Calendar size={20} className="text-secondary" /> Próximos
+    <ClientPageShell
+      title="Meus Agendamentos"
+      subtitle="Acompanhe seus horários, reagende ou cancele quando precisar."
+    >
+      <section className="mb-10 sm:mb-12">
+        <div className="flex items-center justify-between gap-3 mb-4 sm:mb-5">
+          <h2 className="text-base sm:text-lg font-bold text-text flex items-center gap-2">
+            <Calendar size={20} className="text-secondary shrink-0" />
+            Próximos
           </h2>
-          {upcoming.length === 0 ? (
-            <p className="text-gray-400 bg-card rounded-xl p-6 text-center">Nenhum agendamento futuro.</p>
-          ) : (
-            <div className="space-y-4">
-              {upcoming.map((a) => (
-                <AppointmentCard
-                  key={a.id}
-                  appointment={a}
-                  onCancel={() => handleCancel(a.id)}
-                  onReschedule={() => {
-                    setRescheduleModal(a);
-                    setNewDate(format(toDate(a.startAt), DATE_FORMAT));
-                    setSelectedSlot(null);
-                  }}
-                  actionLoading={actionLoading}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+          <Link
+            to="/agendar"
+            className="text-xs sm:text-sm text-secondary hover:underline font-medium whitespace-nowrap"
+          >
+            + Novo agendamento
+          </Link>
+        </div>
 
-        <section>
-          <h2 className="text-lg font-bold text-text mb-4">Histórico</h2>
-          {history.length === 0 ? (
-            <p className="text-gray-400">Nenhum histórico.</p>
-          ) : (
-            <div className="space-y-3">
-              {history.map((a) => (
-                <AppointmentCard key={a.id} appointment={a} readonly />
-              ))}
+        {upcoming.length === 0 ? (
+          <div className="client-panel p-8 sm:p-10 text-center">
+            <div className="inline-flex p-4 rounded-2xl bg-secondary/10 text-secondary mb-4">
+              <CalendarPlus size={28} />
             </div>
-          )}
-        </section>
-      </div>
+            <p className="text-text font-medium mb-2">Nenhum agendamento futuro</p>
+            <p className="text-gray-400 text-sm mb-5 max-w-xs mx-auto">
+              Que tal reservar seu próximo horário na barbearia?
+            </p>
+            <Link to="/agendar">
+              <Button>Agendar horário</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {upcoming.map((a) => (
+              <AppointmentCard
+                key={a.id}
+                appointment={a}
+                upcoming
+                onCancel={() => handleCancel(a.id)}
+                onReschedule={() => {
+                  setRescheduleModal(a);
+                  setNewDate(format(toDate(a.startAt), DATE_FORMAT));
+                  setSelectedSlot(null);
+                }}
+                actionLoading={actionLoading}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-base sm:text-lg font-bold text-text mb-4 sm:mb-5">Histórico</h2>
+        {history.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center py-6">Nenhum histórico ainda.</p>
+        ) : (
+          <div className="space-y-3">
+            {history.map((a) => (
+              <AppointmentCard key={a.id} appointment={a} readonly />
+            ))}
+          </div>
+        )}
+      </section>
 
       <Modal
         isOpen={!!rescheduleModal}
         onClose={() => setRescheduleModal(null)}
         title="Reagendar horário"
       >
+        <p className="text-sm text-gray-400 mb-4">
+          {rescheduleModal?.serviceName} com {rescheduleModal?.barberName}
+        </p>
+        <label className="block text-sm text-gray-400 mb-1.5">Nova data</label>
         <input
           type="date"
           value={newDate}
@@ -153,62 +181,98 @@ export default function MyAppointments() {
             setNewDate(e.target.value);
             setSelectedSlot(null);
           }}
-          className="w-full px-4 py-2 rounded-xl bg-primary border border-gray-700 text-text mb-4"
+          className="w-full px-4 py-2.5 rounded-xl bg-primary border border-gray-700 text-text mb-4 focus:border-secondary outline-none"
         />
-        <div className="grid grid-cols-3 gap-2 mb-4 max-h-48 overflow-y-auto">
-          {slots.map((slot) => (
-            <button
-              key={slot.label}
-              type="button"
-              onClick={() => setSelectedSlot(slot)}
-              className={`py-2 rounded-lg border text-sm cursor-pointer ${
-                selectedSlot?.label === slot.label ? 'border-secondary bg-secondary text-white' : 'border-gray-700'
-              }`}
-            >
-              {slot.label}
-            </button>
-          ))}
+        <label className="block text-sm text-gray-400 mb-2">Horário disponível</label>
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-5 max-h-48 overflow-y-auto pr-1">
+          {slots.length === 0 ? (
+            <p className="col-span-full text-sm text-gray-500 py-4 text-center">Nenhum horário nesta data.</p>
+          ) : (
+            slots.map((slot) => (
+              <button
+                key={slot.label}
+                type="button"
+                onClick={() => setSelectedSlot(slot)}
+                className={`py-2.5 rounded-xl border text-sm font-medium cursor-pointer transition-all ${
+                  selectedSlot?.label === slot.label
+                    ? 'border-secondary bg-secondary text-white'
+                    : 'border-gray-700 hover:border-secondary/60 text-text'
+                }`}
+              >
+                {slot.label}
+              </button>
+            ))
+          )}
         </div>
-        <Button onClick={handleReschedule} className="w-full" loading={actionLoading}>
+        <Button onClick={handleReschedule} className="w-full" loading={actionLoading} disabled={!selectedSlot}>
           Confirmar reagendamento
         </Button>
       </Modal>
-    </div>
+    </ClientPageShell>
   );
 }
 
-function AppointmentCard({ appointment: a, onCancel, onReschedule, readonly, actionLoading }) {
+function AppointmentCard({ appointment: a, onCancel, onReschedule, readonly, upcoming, actionLoading }) {
   const isScheduled = a.status === APPOINTMENT_STATUS.SCHEDULED;
   const whatsappUrl = `${WHATSAPP_BASE_URL}/5531995925295?text=${buildWhatsAppMessage(a)}`;
+  const startDate = toDate(a.startAt);
+  const dayNum = format(startDate, 'd');
+  const month = format(startDate, 'MMM', { locale: ptBR });
 
   return (
-    <div className="bg-card rounded-xl border border-gray-800 p-5">
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <h3 className="font-bold text-text text-lg">{a.serviceName}</h3>
-          <p className="text-gray-400 text-sm">{a.barberName}</p>
+    <div
+      className={`appointment-card client-panel p-4 sm:p-5 ${
+        upcoming ? 'appointment-card-upcoming' : 'opacity-90'
+      }`}
+    >
+      <div className="flex gap-3 sm:gap-4">
+        <div
+          className={`flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-xl shrink-0 border ${
+            upcoming
+              ? 'bg-secondary/15 border-secondary/40 text-secondary'
+              : 'bg-gray-800/60 border-gray-700 text-gray-400'
+          }`}
+        >
+          <span className="text-[10px] sm:text-xs uppercase font-bold leading-none">{month}</span>
+          <span className="text-xl sm:text-2xl font-bold text-text leading-tight">{dayNum}</span>
         </div>
-        <StatusBadge status={a.status} />
+
+        <div className="min-w-0 flex-1">
+          <div className="flex justify-between items-start gap-2 mb-2">
+            <div className="min-w-0">
+              <h3 className="font-bold text-text text-base sm:text-lg leading-tight truncate">{a.serviceName}</h3>
+              <p className="text-gray-400 text-sm flex items-center gap-1 mt-1">
+                <User size={13} className="shrink-0" /> {a.barberName}
+              </p>
+            </div>
+            <StatusBadge status={a.status} />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mb-3">
+            <span className="text-text flex items-center gap-1">
+              <Clock size={13} className="text-gray-500 shrink-0" />
+              {formatDate(a.startAt)} às {formatTime(a.startAt)}
+            </span>
+            <span className="text-secondary font-bold">R$ {a.price?.toFixed(2)}</span>
+          </div>
+
+          {!readonly && isScheduled && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button size="sm" variant="secondary" onClick={onReschedule} disabled={actionLoading}>
+                <RefreshCw size={14} className="inline mr-1" /> Reagendar
+              </Button>
+              <Button size="sm" variant="danger" onClick={onCancel} disabled={actionLoading}>
+                <X size={14} className="inline mr-1" /> Cancelar
+              </Button>
+              <a href={whatsappUrl} target="_blank" rel="noreferrer">
+                <Button size="sm" variant="ghost">
+                  <MessageCircle size={14} className="inline mr-1" /> WhatsApp
+                </Button>
+              </a>
+            </div>
+          )}
+        </div>
       </div>
-      <p className="text-text mb-1">
-        {formatDate(a.startAt)} às {formatTime(a.startAt)}
-      </p>
-      <p className="text-secondary font-bold mb-4">R$ {a.price?.toFixed(2)}</p>
-      {!readonly && isScheduled && (
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="secondary" onClick={onReschedule} disabled={actionLoading}>
-            <RefreshCw size={14} className="inline mr-1" /> Reagendar
-          </Button>
-          <Button size="sm" variant="danger" onClick={onCancel} disabled={actionLoading}>
-            <X size={14} className="inline mr-1" /> Cancelar
-          </Button>
-          <a href={whatsappUrl} target="_blank" rel="noreferrer">
-            <Button size="sm" variant="ghost">
-              <MessageCircle size={14} className="inline mr-1" /> WhatsApp
-            </Button>
-          </a>
-        </div>
-      )}
     </div>
   );
 }
