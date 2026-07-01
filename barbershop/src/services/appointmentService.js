@@ -21,20 +21,42 @@ import { DATE_FORMAT } from '../utils/dateUtils';
 
 const COLLECTION = 'appointments';
 
-/** Busca agendamentos do barbeiro no dia — sem índice composto (filtra em memória). */
-export async function getAppointmentsByBarberAndDate(barberId, dateStr) {
+function filterAppointmentsByDate(docs, dateStr) {
   const { start, end } = getDayBounds(dateStr);
-  const snap = await getDocs(
-    query(collection(db, COLLECTION), where('barberId', '==', barberId))
-  );
-
-  return snap.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
+  return docs
     .filter((a) => {
       const apptStart = toDate(a.startAt);
       return apptStart >= start && apptStart <= end;
     })
     .sort((a, b) => toDate(a.startAt) - toDate(b.startAt));
+}
+
+/** Busca agendamentos do barbeiro no dia (admin — todos os status). */
+export async function getAppointmentsByBarberAndDate(barberId, dateStr) {
+  const snap = await getDocs(
+    query(collection(db, COLLECTION), where('barberId', '==', barberId))
+  );
+
+  return filterAppointmentsByDate(
+    snap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    dateStr
+  );
+}
+
+/** Agendamentos ativos do barbeiro no dia — usado no cálculo de horários (clientes). */
+async function getScheduledAppointmentsByBarberAndDate(barberId, dateStr) {
+  const snap = await getDocs(
+    query(
+      collection(db, COLLECTION),
+      where('barberId', '==', barberId),
+      where('status', '==', APPOINTMENT_STATUS.SCHEDULED)
+    )
+  );
+
+  return filterAppointmentsByDate(
+    snap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    dateStr
+  );
 }
 
 export async function getClientAppointments(clientId) {
@@ -79,7 +101,7 @@ export async function getAvailableSlots({ barberId, dateStr, serviceDurationMinu
   const availability = await getAvailabilityForBarberAndDate(barber, dateStr);
   if (availability.isDayOff) return [];
 
-  const appointments = await getAppointmentsByBarberAndDate(barberId, dateStr);
+  const appointments = await getScheduledAppointmentsByBarberAndDate(barberId, dateStr);
 
   return calculateAvailableSlots({
     dateStr,
