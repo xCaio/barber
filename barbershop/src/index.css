@@ -6,9 +6,28 @@
   --color-secondary: #BD1A1A;
   --color-card: #1E1E1E;
 }
+:root {
+  --header-height: 5.25rem;
+}
+@media (min-width: 640px) {
+  :root {
+    --header-height: 6rem;
+  }
+}
+@media (min-width: 768px) {
+  :root {
+    --header-height: 6.5rem;
+  }
+}
 *{
   scroll-behavior: smooth;
-  scroll-padding-top: 6rem;
+  scroll-padding-top: var(--header-height);
+}
+html {
+  overflow-x: clip;
+}
+body {
+  overflow-x: clip;
 }
 body{
   font-family: Airbnb Cereal VF, Circular, -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, sans-serif;
@@ -28,4 +47,234 @@ body{
 }
 .card{
   box-shadow: 4px 4px 1px;
+}
+
+/* ── Landing animations (CSS only, lightweight) ── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .animate-float,
+  .hero-bg-zoom,
+  .section-accent,
+  .service-card,
+  .stat-pill,
+  .contact-card,
+  .btn-landing {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+.reveal {
+  opacity: 0;
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal-up { transform: translateY(28px); }
+.reveal-down { transform: translateY(-28px); }
+.reveal-left { transform: translateX(-28px); }
+.reveal-right { transform: translateX(28px); }
+.reveal-fade { transform: none; }
+.reveal-scale { transform: scale(0.96); }
+
+.reveal-visible {
+  opacity: 1;
+  transform: translate(0) scale(1);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes heroBgZoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+
+.hero-bg-zoom {
+  animation: heroBgZoom 22s ease-in-out infinite alternate;
+}
+
+@keyframes accentPulse {
+  0%, 100% { opacity: 0.7; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.08); }
+}
+
+.section-accent {
+  width: 4.5rem;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #BD1A1A, transparent);
+  animation: accentPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.05); }
+}
+
+.hero-glow {
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+.service-card {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.service-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(189, 26, 26, 0.18);
+}
+
+.service-card .service-card-image {
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.service-card:hover .service-card-image {
+  transform: scale(1.06);
+}
+
+.stat-pill {
+  transition: transform 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.stat-pill:hover {
+  transform: translateY(-4px);
+  border-color: rgba(189, 26, 26, 0.5);
+  background-color: rgba(189, 26, 26, 0.08);
+}
+
+.contact-card {
+  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.contact-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  border-color: rgba(189, 26, 26, 0.35);
+}
+
+.btn-landing {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+}
+
+.btn-landing:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(189, 26, 26, 0.35);
+}
+
+.btn-landing:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ── Client pages (agendar, meus-agendamentos) ── */
+.client-page-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(189, 26, 26, 0.1) 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(189, 26, 26, 0.05) 0%, transparent 45%);
+}
+
+.client-panel {
+  background: linear-gradient(145deg, rgba(30, 30, 30, 0.98) 0%, rgba(22, 22, 22, 0.98) 100%);
+  border: 1px solid rgba(55, 65, 81, 0.65);
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.booking-option {
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.booking-option:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(189, 26, 26, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.booking-option-selected {
+  border-color: #BD1A1A !important;
+  background: rgba(189, 26, 26, 0.1) !important;
+  box-shadow: 0 0 0 1px rgba(189, 26, 26, 0.25);
+}
+
+.appointment-card {
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.appointment-card:hover {
+  border-color: rgba(189, 26, 26, 0.35);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.appointment-card-upcoming {
+  border-left: 3px solid #BD1A1A;
+}
+
+.social-icon {
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.social-icon:hover {
+  transform: scale(1.15) translateY(-2px);
+  color: #BD1A1A;
+}
+
+/* Mobile: animações mais sutis e menos deslocamento */
+@media (max-width: 639px) {
+  .reveal-up,
+  .reveal-down {
+    transform: translateY(14px);
+  }
+
+  .reveal-left,
+  .reveal-right {
+    transform: translateY(14px);
+  }
+
+  .reveal-scale {
+    transform: scale(0.98);
+  }
+
+  .animate-float {
+    animation-duration: 6s;
+  }
+
+  .hero-bg-zoom {
+    animation-duration: 28s;
+  }
+
+  .service-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .stat-pill:hover,
+  .contact-card:hover {
+    transform: none;
+  }
 }

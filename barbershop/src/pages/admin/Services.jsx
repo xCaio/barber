@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, ImagePlus } from 'lucide-react';
 import { getAllServices, createService, updateService, deleteService } from '../../services/serviceService';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -7,7 +7,15 @@ import Modal from '../../components/ui/Modal';
 import Loading from '../../components/ui/Loading';
 import toast from 'react-hot-toast';
 
-const emptyForm = { name: '', description: '', price: '', durationMinutes: '', order: 0, active: true };
+const emptyForm = {
+  name: '',
+  description: '',
+  price: '',
+  durationMinutes: '',
+  order: 0,
+  active: true,
+  image: '',
+};
 
 export default function AdminServices() {
   const [services, setServices] = useState([]);
@@ -20,7 +28,9 @@ export default function AdminServices() {
     getAllServices().then(setServices).finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const openCreate = () => {
     setForm(emptyForm);
@@ -35,6 +45,7 @@ export default function AdminServices() {
       durationMinutes: String(s.durationMinutes),
       order: s.order || 0,
       active: s.active ?? true,
+      image: s.image || '',
     });
     setModal({ type: 'edit', id: s.id });
   };
@@ -47,6 +58,7 @@ export default function AdminServices() {
       durationMinutes: parseInt(form.durationMinutes, 10),
       order: parseInt(form.order, 10) || 0,
       active: form.active,
+      image: form.image.trim(),
     };
     if (!data.name || !data.price || !data.durationMinutes) {
       toast.error('Preencha nome, preço e duração.');
@@ -79,6 +91,8 @@ export default function AdminServices() {
 
   if (loading) return <Loading />;
 
+  const previewImage = form.image.trim();
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
@@ -92,15 +106,28 @@ export default function AdminServices() {
         {services.map((s) => (
           <div key={s.id} className="bg-card rounded-xl border border-gray-800 p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-bold text-text text-base sm:text-lg">{s.name}</h3>
-                  {!s.active && <span className="text-xs bg-gray-700 px-2 py-0.5 rounded">Inativo</span>}
+              <div className="flex gap-3 sm:gap-4 min-w-0 flex-1">
+                {s.image ? (
+                  <img
+                    src={s.image}
+                    alt={s.name}
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover shrink-0 border border-gray-700"
+                  />
+                ) : (
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg shrink-0 border border-gray-700 bg-gray-800/80 flex items-center justify-center">
+                    <ImagePlus size={22} className="text-gray-500" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-bold text-text text-base sm:text-lg">{s.name}</h3>
+                    {!s.active && <span className="text-xs bg-gray-700 px-2 py-0.5 rounded">Inativo</span>}
+                  </div>
+                  <p className="text-gray-400 text-sm mt-1 line-clamp-2">{s.description}</p>
+                  <p className="text-secondary font-bold mt-2 text-sm sm:text-base">
+                    R$ {s.price?.toFixed(2)} • {s.durationMinutes} min
+                  </p>
                 </div>
-                <p className="text-gray-400 text-sm mt-1 line-clamp-2">{s.description}</p>
-                <p className="text-secondary font-bold mt-2 text-sm sm:text-base">
-                  R$ {s.price?.toFixed(2)} • {s.durationMinutes} min
-                </p>
               </div>
               <div className="flex gap-2 w-full sm:w-auto shrink-0">
                 <Button size="sm" variant="secondary" className="flex-1 sm:flex-none" onClick={() => openEdit(s)}>
@@ -123,6 +150,30 @@ export default function AdminServices() {
             <Input label="Preço (R$)" type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
             <Input label="Duração (min)" type="number" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} />
           </div>
+
+          <div>
+            <Input
+              label="Caminho da foto"
+              value={form.image}
+              onChange={(e) => setForm({ ...form, image: e.target.value })}
+              placeholder="/images/services/corte-masculino.jpg"
+            />
+            <p className="text-xs text-gray-500 mt-1.5">
+              Coloque a imagem redimensionada em <code className="text-gray-400">public/images/services/</code> e use o caminho acima.
+              Recomendado: 800×600 px, JPG ou WebP.
+            </p>
+            {previewImage && (
+              <img
+                src={previewImage}
+                alt="Prévia"
+                className="mt-3 w-full h-40 sm:h-48 object-cover rounded-lg border border-gray-700"
+                onError={(e) => {
+                  e.currentTarget.classList.add('hidden');
+                }}
+              />
+            )}
+          </div>
+
           <label className="flex items-center gap-2 text-text cursor-pointer">
             <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
             Ativo
