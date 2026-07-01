@@ -7,7 +7,6 @@ import {
   updateDoc,
   query,
   where,
-  orderBy,
   Timestamp,
   serverTimestamp,
 } from 'firebase/firestore';
@@ -22,44 +21,58 @@ import { DATE_FORMAT } from '../utils/dateUtils';
 
 const COLLECTION = 'appointments';
 
+/** Busca agendamentos do barbeiro no dia — sem índice composto (filtra em memória). */
 export async function getAppointmentsByBarberAndDate(barberId, dateStr) {
   const { start, end } = getDayBounds(dateStr);
-  const q = query(
-    collection(db, COLLECTION),
-    where('barberId', '==', barberId),
-    where('startAt', '>=', Timestamp.fromDate(start)),
-    where('startAt', '<=', Timestamp.fromDate(end)),
-    orderBy('startAt', 'asc')
+  const snap = await getDocs(
+    query(collection(db, COLLECTION), where('barberId', '==', barberId))
   );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((a) => {
+      const apptStart = toDate(a.startAt);
+      return apptStart >= start && apptStart <= end;
+    })
+    .sort((a, b) => toDate(a.startAt) - toDate(b.startAt));
 }
 
 export async function getClientAppointments(clientId) {
-  const q = query(
-    collection(db, COLLECTION),
-    where('clientId', '==', clientId),
-    orderBy('startAt', 'desc')
+  const snap = await getDocs(
+    query(collection(db, COLLECTION), where('clientId', '==', clientId))
   );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => toDate(b.startAt) - toDate(a.startAt));
 }
 
 export async function getUpcomingAppointments(barberId, limit = 20) {
-  const now = Timestamp.now();
-  const constraints = [
-    where('startAt', '>=', now),
-    orderBy('startAt', 'asc'),
-  ];
+  const now = new Date();
+  let docs;
+
   if (barberId) {
-    constraints.unshift(where('barberId', '==', barberId));
+    const snap = await getDocs(
+      query(collection(db, COLLECTION), where('barberId', '==', barberId))
+    );
+    docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } else {
+    const snap = await getDocs(collection(db, COLLECTION));
+    docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   }
-  const q = query(collection(db, COLLECTION), ...constraints);
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() })).slice(0, limit);
+
+  return docs
+    .filter((a) => toDate(a.startAt) >= now && a.status === APPOINTMENT_STATUS.SCHEDULED)
+    .sort((a, b) => toDate(a.startAt) - toDate(b.startAt))
+    .slice(0, limit);
 }
 
 export async function getAvailableSlots({ barberId, dateStr, serviceDurationMinutes }) {
+  const duration = Number(serviceDurationMinutes);
+  if (!duration || duration <= 0) {
+    throw new Error('Duração do serviço inválida.');
+  }
+
   const barber = await getBarberById(barberId);
   if (!barber) return [];
 
@@ -70,7 +83,7 @@ export async function getAvailableSlots({ barberId, dateStr, serviceDurationMinu
 
   return calculateAvailableSlots({
     dateStr,
-    serviceDurationMinutes,
+    serviceDurationMinutes: duration,
     workingHours: availability.workingHours,
     lunchBreak: availability.lunchBreak,
     appointments,
@@ -148,15 +161,17 @@ export async function getAppointmentById(id) {
 export async function getAppointmentsByDateRange(barberId, startDate, endDate) {
   const start = new Date(startDate + 'T00:00:00');
   const end = new Date(endDate + 'T23:59:59');
-  const q = query(
-    collection(db, COLLECTION),
-    where('barberId', '==', barberId),
-    where('startAt', '>=', Timestamp.fromDate(start)),
-    where('startAt', '<=', Timestamp.fromDate(end)),
-    orderBy('startAt', 'asc')
+  const snap = await getDocs(
+    query(collection(db, COLLECTION), where('barberId', '==', barberId))
   );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((a) => {
+      const apptStart = toDate(a.startAt);
+      return apptStart >= start && apptStart <= end;
+    })
+    .sort((a, b) => toDate(a.startAt) - toDate(b.startAt));
 }
 
 export function buildWhatsAppMessage(appointment) {

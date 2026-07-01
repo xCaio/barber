@@ -81,25 +81,35 @@ export default function AdminServices() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-secondary">Serviços</h1>
-        <Button onClick={openCreate}><Plus size={18} className="inline mr-1" /> Novo</Button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-secondary">Serviços</h1>
+        <Button onClick={openCreate} className="w-full sm:w-auto">
+          <Plus size={18} className="inline mr-1" /> Novo serviço
+        </Button>
       </div>
 
       <div className="grid gap-4">
         {services.map((s) => (
-          <div key={s.id} className="bg-card rounded-xl border border-gray-800 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-text text-lg">{s.name}</h3>
-                {!s.active && <span className="text-xs bg-gray-700 px-2 py-0.5 rounded">Inativo</span>}
+          <div key={s.id} className="bg-card rounded-xl border border-gray-800 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-bold text-text text-base sm:text-lg">{s.name}</h3>
+                  {!s.active && <span className="text-xs bg-gray-700 px-2 py-0.5 rounded">Inativo</span>}
+                </div>
+                <p className="text-gray-400 text-sm mt-1 line-clamp-2">{s.description}</p>
+                <p className="text-secondary font-bold mt-2 text-sm sm:text-base">
+                  R$ {s.price?.toFixed(2)} • {s.durationMinutes} min
+                </p>
               </div>
-              <p className="text-gray-400 text-sm mt-1">{s.description}</p>
-              <p className="text-secondary font-bold mt-2">R$ {s.price?.toFixed(2)} • {s.durationMinutes} min</p>
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="secondary" onClick={() => openEdit(s)}><Pencil size={14} /></Button>
-              <Button size="sm" variant="danger" onClick={() => remove(s.id)}><Trash2 size={14} /></Button>
+              <div className="flex gap-2 w-full sm:w-auto shrink-0">
+                <Button size="sm" variant="secondary" className="flex-1 sm:flex-none" onClick={() => openEdit(s)}>
+                  <Pencil size={14} className="inline mr-1" /> Editar
+                </Button>
+                <Button size="sm" variant="danger" className="flex-1 sm:flex-none" onClick={() => remove(s.id)}>
+                  <Trash2 size={14} className="inline mr-1" /> Excluir
+                </Button>
+              </div>
             </div>
           </div>
         ))}
@@ -109,7 +119,7 @@ export default function AdminServices() {
         <div className="space-y-4">
           <Input label="Nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <Input label="Descrição" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Preço (R$)" type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
             <Input label="Duração (min)" type="number" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} />
           </div>

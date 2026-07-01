@@ -55,9 +55,25 @@ npm run dev
 
 Isso cadastra o barbeiro **Thiago Garcia** e os 6 serviços. Sem isso, `/agendar` não mostra barbeiros.
 
-## 6. Tornar-se admin (resumo)
+## 7. Login com "Tempo esgotado"
 
-Após criar sua conta, no Firestore Console:
+Se o login trava mesmo com internet ok:
 
-- Collection `users` → documento com seu UID
-- Campo `role`: altere de `client` para `admin`
+### A) Limpar cache do navegador
+1. Abra o site (`localhost:5173`)
+2. **F12** → Application → **Clear site data** (Limpar dados do site)
+3. Recarregue e tente de novo
+
+### B) Liberar API Key para localhost
+1. [Google Cloud Console](https://console.cloud.google.com) → APIs → **Credentials**
+2. Abra a API Key do Firebase (`AIzaSy...`)
+3. Em **Application restrictions** → **HTTP referrers**
+4. Adicione:
+   - `http://localhost:*/*`
+   - `http://127.0.0.1:*/*`
+5. Salve e aguarde 1–2 minutos
+
+### C) Domínios autorizados no Firebase
+Firebase Console → **Authentication** → **Settings** → **Authorized domains**  
+Confirme que existem: `localhost` e `127.0.0.1`
+

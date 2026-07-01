@@ -59,17 +59,36 @@ export default function Booking() {
   }, []);
 
   useEffect(() => {
-    if (!selected.barber || !selected.service || !selected.date) return;
+    if (step !== 3 || !selected.barber || !selected.service || !selected.date) return;
+
+    const duration = Number(selected.service.durationMinutes);
+    if (!duration || duration <= 0) {
+      toast.error('Este serviço não tem duração configurada. Peça ao admin para corrigir.');
+      return;
+    }
+
     setSlotsLoading(true);
     getAvailableSlots({
       barberId: selected.barber.id,
       dateStr: selected.date,
-      serviceDurationMinutes: selected.service.durationMinutes,
+      serviceDurationMinutes: duration,
     })
-      .then(setSlots)
-      .catch(() => toast.error('Erro ao buscar horários.'))
+      .then((result) => {
+        setSlots(result);
+        if (result.length === 0) {
+          const day = new Date(selected.date + 'T12:00:00').getDay();
+          if (day === 0) {
+            toast('Domingo: barbearia fechada. Escolha outro dia.', { icon: '📅' });
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Erro ao buscar horários:', err);
+        toast.error(err.message || 'Erro ao buscar horários.');
+        setSlots([]);
+      })
       .finally(() => setSlotsLoading(false));
-  }, [selected.barber, selected.service, selected.date]);
+  }, [step, selected.barber, selected.service, selected.date]);
 
   const changeDate = (days) => {
     const current = new Date(selected.date + 'T12:00:00');
@@ -182,6 +201,7 @@ export default function Booking() {
               slots={slots}
               loading={slotsLoading}
               selected={selected.slot}
+              dateStr={selected.date}
               onSelect={(slot) => {
                 setSelected((s) => ({ ...s, slot }));
                 setStep(4);
@@ -236,6 +256,9 @@ function StepBarber({ barbers, selected, onSelect }) {
 }
 
 function StepService({ services, selected, onSelect }) {
+  if (!services.length) {
+    return <p className="text-gray-400">Nenhum serviço disponível. O administrador precisa cadastrar os serviços.</p>;
+  }
   return (
     <div className="grid gap-3">
       <h2 className="text-xl font-bold text-text mb-2">Escolha o serviço</h2>
@@ -279,10 +302,24 @@ function StepDate({ date, onChangeDate, onNext }) {
   );
 }
 
-function StepTime({ slots, loading, selected, onSelect }) {
+function StepTime({ slots, loading, selected, onSelect, dateStr }) {
   if (loading) return <Loading message="Buscando horários disponíveis..." />;
+
+  const day = new Date(dateStr + 'T12:00:00').getDay();
+  if (day === 0) {
+    return (
+      <p className="text-gray-400 text-center py-8">
+        A barbearia não abre aos domingos. Volte e escolha outra data.
+      </p>
+    );
+  }
+
   if (!slots.length) {
-    return <p className="text-gray-400 text-center py-8">Nenhum horário disponível nesta data. Tente outro dia.</p>;
+    return (
+      <p className="text-gray-400 text-center py-8">
+        Nenhum horário disponível nesta data. Tente outro dia ou um serviço mais curto.
+      </p>
+    );
   }
   return (
     <div>

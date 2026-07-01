@@ -8,11 +8,17 @@ import {
 import { db } from '../config/firebase';
 import { format } from 'date-fns';
 import { DATE_FORMAT } from '../utils/dateUtils';
+import { DEFAULT_WORKING_HOURS, DEFAULT_LUNCH_BREAK } from '../constants';
 
 const COLLECTION = 'availability';
 
 function availabilityDocId(barberId, dateStr) {
   return `${barberId}_${dateStr}`;
+}
+
+function getWeeklyDay(schedule, dayOfWeek) {
+  if (!schedule) return null;
+  return schedule[dayOfWeek] ?? schedule[String(dayOfWeek)] ?? null;
 }
 
 export async function getDayAvailability(barberId, dateStr) {
@@ -74,17 +80,29 @@ export async function getAvailabilityForBarberAndDate(barber, dateStr) {
     return { isDayOff: true, workingHours: null, lunchBreak: null, blockedSlots: [] };
   }
 
-  const weekly = barber.weeklySchedule?.[dayOfWeek];
+  const weekly = getWeeklyDay(barber.weeklySchedule, dayOfWeek);
   const enabled = weekly?.enabled ?? (dayOfWeek >= 1 && dayOfWeek <= 6);
 
   if (!enabled) {
     return { isDayOff: true, workingHours: null, lunchBreak: null, blockedSlots: [] };
   }
 
+  const workingHours =
+    dayAvailability?.workingHours ||
+    weekly?.workingHours ||
+    barber.workingHours ||
+    DEFAULT_WORKING_HOURS;
+
+  const lunchBreak =
+    dayAvailability?.lunchBreak ||
+    weekly?.lunchBreak ||
+    barber.lunchBreak ||
+    DEFAULT_LUNCH_BREAK;
+
   return {
     isDayOff: false,
-    workingHours: dayAvailability?.workingHours || weekly?.workingHours || barber.workingHours,
-    lunchBreak: dayAvailability?.lunchBreak || weekly?.lunchBreak || barber.lunchBreak,
+    workingHours,
+    lunchBreak,
     blockedSlots: dayAvailability?.blockedSlots || [],
   };
 }
