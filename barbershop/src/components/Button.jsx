@@ -1,12 +1,14 @@
-import React from 'react'
+import { Link } from 'react-router-dom';
 
 const Button = () => {
   return (
-    <a href="https://wa.me/+5531995925295/?text=Olá, gostaria de agendar um horário com você!" target='_blank' className='mx-5 px-0 py-0 text-sm md:mx-5 px-5 py-5 shadow-2xl bg-button rounded-2xl cursor-pointer hover:scale-110 font-bold text-text'>
-      <button className='cursor-pointer'>Agende seu Horário</button>
+    <Link
+      to="/agendar"
+      className="mx-5 px-5 py-3 text-sm md:text-base shadow-2xl bg-button rounded-2xl cursor-pointer hover:scale-105 transition-transform font-bold text-text inline-block"
+    >
+      Agende seu Horário
+    </Link>
+  );
+};
 
-    </a>
-  )
-}
-
-export default Button
+export default Button;
