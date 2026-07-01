@@ -13,7 +13,26 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { isFirebaseConfigured } from '../../config/firebase';
 
-const STEPS = ['Barbeiro', 'Serviço', 'Data', 'Horário', 'Confirmar'];
+const STEPS = ['Barbeiro', 'Serviços', 'Data', 'Horário', 'Confirmar'];
+const BOOKING_DRAFT_KEY = 'bookingDraft';
+
+function sumDuration(services) {
+  return services.reduce((acc, s) => acc + Number(s.durationMinutes || 0), 0);
+}
+
+function sumPrice(services) {
+  return services.reduce((acc, s) => acc + Number(s.price || 0), 0);
+}
+
+function formatServiceNames(services) {
+  return services.map((s) => s.name).join(' + ');
+}
+
+function isPermissionError(err) {
+  const code = err?.code || '';
+  const message = (err?.message || '').toLowerCase();
+  return code === 'permission-denied' || message.includes('permission') || message.includes('insufficient');
+}
 
 export default function Booking() {
   const { user, profile } = useAuthStore();
@@ -27,12 +46,37 @@ export default function Booking() {
   const [submitting, setSubmitting] = useState(false);
   const [selected, setSelected] = useState({
     barber: null,
-    service: null,
+    services: [],
     date: format(new Date(), DATE_FORMAT),
     slot: null,
   });
 
   const [loadError, setLoadError] = useState(null);
+
+  const saveDraft = (nextStep) => {
+    if (!selected.barber || !selected.services.length) return;
+    sessionStorage.setItem(
+      BOOKING_DRAFT_KEY,
+      JSON.stringify({
+        barberId: selected.barber.id,
+        serviceIds: selected.services.map((s) => s.id),
+        date: selected.date,
+        step: nextStep,
+      })
+    );
+  };
+
+  const redirectToLogin = (nextStep = 2) => {
+    saveDraft(nextStep);
+    toast('Faça login para continuar o agendamento.', { icon: '🔒' });
+    navigate('/login', { state: { from: { pathname: '/agendar' } } });
+  };
+
+  const requireLogin = (nextStep = 2) => {
+    if (user) return true;
+    redirectToLogin(nextStep);
+    return false;
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -59,11 +103,42 @@ export default function Booking() {
   }, []);
 
   useEffect(() => {
-    if (step !== 3 || !selected.barber || !selected.service || !selected.date) return;
+    if (loading || !barbers.length || !services.length) return;
 
-    const duration = Number(selected.service.durationMinutes);
+    const raw = sessionStorage.getItem(BOOKING_DRAFT_KEY);
+    if (!raw) return;
+
+    try {
+      const draft = JSON.parse(raw);
+      sessionStorage.removeItem(BOOKING_DRAFT_KEY);
+
+      const barber = barbers.find((b) => b.id === draft.barberId);
+      const restoredServices = (draft.serviceIds || [])
+        .map((id) => services.find((s) => s.id === id))
+        .filter(Boolean);
+
+      if (barber && restoredServices.length) {
+        setSelected((prev) => ({
+          ...prev,
+          barber,
+          services: restoredServices,
+          date: draft.date || prev.date,
+          slot: null,
+        }));
+        setStep(typeof draft.step === 'number' ? draft.step : 2);
+        toast.success('Continue de onde parou.');
+      }
+    } catch {
+      sessionStorage.removeItem(BOOKING_DRAFT_KEY);
+    }
+  }, [loading, barbers, services]);
+
+  useEffect(() => {
+    if (step !== 3 || !user || !selected.barber || !selected.services.length || !selected.date) return;
+
+    const duration = sumDuration(selected.services);
     if (!duration || duration <= 0) {
-      toast.error('Este serviço não tem duração configurada. Peça ao admin para corrigir.');
+      toast.error('Os serviços selecionados não têm duração configurada. Peça ao admin para corrigir.');
       return;
     }
 
@@ -84,11 +159,15 @@ export default function Booking() {
       })
       .catch((err) => {
         console.error('Erro ao buscar horários:', err);
+        if (isPermissionError(err)) {
+          redirectToLogin(3);
+          return;
+        }
         toast.error(err.message || 'Erro ao buscar horários.');
         setSlots([]);
       })
       .finally(() => setSlotsLoading(false));
-  }, [step, selected.barber, selected.service, selected.date]);
+  }, [step, user, selected.barber, selected.services, selected.date]);
 
   const changeDate = (days) => {
     const current = new Date(selected.date + 'T12:00:00');
@@ -98,10 +177,7 @@ export default function Booking() {
   };
 
   const handleConfirm = async () => {
-    if (!user) {
-      navigate('/login', { state: { from: { pathname: '/agendar' } } });
-      return;
-    }
+    if (!requireLogin(4)) return;
     setSubmitting(true);
     try {
       await createAppointment({
@@ -111,10 +187,10 @@ export default function Booking() {
         clientEmail: user.email,
         barberId: selected.barber.id,
         barberName: selected.barber.name,
-        serviceId: selected.service.id,
-        serviceName: selected.service.name,
-        durationMinutes: selected.service.durationMinutes,
-        price: selected.service.price,
+        serviceId: selected.services.map((s) => s.id).join(','),
+        serviceName: formatServiceNames(selected.services),
+        durationMinutes: sumDuration(selected.services),
+        price: sumPrice(selected.services),
         startAt: selected.slot.start,
       });
       toast.success('Agendamento confirmado!');
@@ -174,17 +250,30 @@ export default function Booking() {
               barbers={barbers}
               selected={selected.barber}
               onSelect={(barber) => {
-                setSelected((s) => ({ ...s, barber, slot: null }));
+                setSelected((s) => ({ ...s, barber, services: [], slot: null }));
                 setStep(1);
               }}
             />
           )}
           {step === 1 && (
-            <StepService
+            <StepServices
               services={services}
-              selected={selected.service}
-              onSelect={(service) => {
-                setSelected((s) => ({ ...s, service, slot: null }));
+              selected={selected.services}
+              onToggle={(service) => {
+                setSelected((s) => {
+                  const exists = s.services.some((item) => item.id === service.id);
+                  const nextServices = exists
+                    ? s.services.filter((item) => item.id !== service.id)
+                    : [...s.services, service];
+                  return { ...s, services: nextServices, slot: null };
+                });
+              }}
+              onContinue={() => {
+                if (!selected.services.length) {
+                  toast.error('Selecione pelo menos um serviço.');
+                  return;
+                }
+                if (!requireLogin(2)) return;
                 setStep(2);
               }}
             />
@@ -193,20 +282,28 @@ export default function Booking() {
             <StepDate
               date={selected.date}
               onChangeDate={changeDate}
-              onNext={() => setStep(3)}
+              onNext={() => {
+                if (!requireLogin(3)) return;
+                setStep(3);
+              }}
             />
           )}
           {step === 3 && (
-            <StepTime
-              slots={slots}
-              loading={slotsLoading}
-              selected={selected.slot}
-              dateStr={selected.date}
-              onSelect={(slot) => {
-                setSelected((s) => ({ ...s, slot }));
-                setStep(4);
-              }}
-            />
+            !user ? (
+              <LoginPrompt onLogin={() => redirectToLogin(3)} />
+            ) : (
+              <StepTime
+                slots={slots}
+                loading={slotsLoading}
+                selected={selected.slot}
+                dateStr={selected.date}
+                totalDuration={sumDuration(selected.services)}
+                onSelect={(slot) => {
+                  setSelected((s) => ({ ...s, slot }));
+                  setStep(4);
+                }}
+              />
+            )
           )}
           {step === 4 && (
             <StepConfirm
@@ -255,30 +352,65 @@ function StepBarber({ barbers, selected, onSelect }) {
   );
 }
 
-function StepService({ services, selected, onSelect }) {
+function StepServices({ services, selected, onToggle, onContinue }) {
   if (!services.length) {
     return <p className="text-gray-400">Nenhum serviço disponível. O administrador precisa cadastrar os serviços.</p>;
   }
+
+  const totalDuration = sumDuration(selected);
+  const totalPrice = sumPrice(selected);
+
   return (
     <div className="grid gap-3">
-      <h2 className="text-xl font-bold text-text mb-2">Escolha o serviço</h2>
-      {services.map((s) => (
-        <button
-          key={s.id}
-          type="button"
-          onClick={() => onSelect(s)}
-          className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
-            selected?.id === s.id ? 'border-secondary bg-secondary/10' : 'border-gray-700 hover:border-gray-500'
-          }`}
-        >
-          <div className="flex justify-between items-start">
-            <p className="font-bold text-text">{s.name}</p>
-            <p className="text-secondary font-bold">R$ {s.price?.toFixed(2)}</p>
-          </div>
-          {s.description && <p className="text-sm text-gray-400 mt-1">{s.description}</p>}
-          <p className="text-xs text-gray-500 mt-2">{s.durationMinutes} min</p>
-        </button>
-      ))}
+      <h2 className="text-xl font-bold text-text mb-2">Escolha os serviços</h2>
+      <p className="text-sm text-gray-400 -mt-1 mb-2">Você pode selecionar mais de um serviço.</p>
+      {services.map((s) => {
+        const isSelected = selected.some((item) => item.id === s.id);
+        return (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => onToggle(s)}
+            className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
+              isSelected ? 'border-secondary bg-secondary/10' : 'border-gray-700 hover:border-gray-500'
+            }`}
+          >
+            <div className="flex justify-between items-start gap-3">
+              <div className="flex items-start gap-3">
+                <span
+                  className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+                    isSelected ? 'border-secondary bg-secondary text-white' : 'border-gray-600'
+                  }`}
+                >
+                  {isSelected ? <Check size={12} /> : null}
+                </span>
+                <div>
+                  <p className="font-bold text-text">{s.name}</p>
+                  {s.description && <p className="text-sm text-gray-400 mt-1">{s.description}</p>}
+                  <p className="text-xs text-gray-500 mt-2">{s.durationMinutes} min</p>
+                </div>
+              </div>
+              <p className="text-secondary font-bold shrink-0">R$ {s.price?.toFixed(2)}</p>
+            </div>
+          </button>
+        );
+      })}
+
+      {selected.length > 0 && (
+        <div className="rounded-xl bg-primary border border-gray-700 p-4 text-sm">
+          <p className="text-text">
+            <span className="text-gray-400">Selecionados:</span> {selected.length} serviço(s)
+          </p>
+          <p className="text-text mt-1">
+            <span className="text-gray-400">Duração total:</span> {totalDuration} min
+          </p>
+          <p className="text-secondary font-bold mt-1">Total: R$ {totalPrice.toFixed(2)}</p>
+        </div>
+      )}
+
+      <Button onClick={onContinue} className="w-full" disabled={!selected.length}>
+        Continuar
+      </Button>
     </div>
   );
 }
@@ -302,7 +434,21 @@ function StepDate({ date, onChangeDate, onNext }) {
   );
 }
 
-function StepTime({ slots, loading, selected, onSelect, dateStr }) {
+function LoginPrompt({ onLogin }) {
+  return (
+    <div className="text-center py-8 px-4">
+      <p className="text-text font-medium mb-2">Você precisa fazer login antes de continuar.</p>
+      <p className="text-gray-400 text-sm mb-6">
+        Entre na sua conta para ver os horários disponíveis e confirmar o agendamento.
+      </p>
+      <Button onClick={onLogin} className="w-full max-w-xs mx-auto">
+        Fazer login
+      </Button>
+    </div>
+  );
+}
+
+function StepTime({ slots, loading, selected, onSelect, dateStr, totalDuration }) {
   if (loading) return <Loading message="Buscando horários disponíveis..." />;
 
   const day = new Date(dateStr + 'T12:00:00').getDay();
@@ -317,13 +463,14 @@ function StepTime({ slots, loading, selected, onSelect, dateStr }) {
   if (!slots.length) {
     return (
       <p className="text-gray-400 text-center py-8">
-        Nenhum horário disponível nesta data. Tente outro dia ou um serviço mais curto.
+        Nenhum horário disponível nesta data. Tente outro dia ou menos serviços ({totalDuration} min no total).
       </p>
     );
   }
   return (
     <div>
-      <h2 className="text-xl font-bold text-text mb-4">Escolha o horário</h2>
+      <h2 className="text-xl font-bold text-text mb-2">Escolha o horário</h2>
+      <p className="text-sm text-gray-400 mb-4">Duração total: {totalDuration} min</p>
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {slots.map((slot) => (
           <button
@@ -345,16 +492,19 @@ function StepTime({ slots, loading, selected, onSelect, dateStr }) {
 }
 
 function StepConfirm({ selected, onConfirm, submitting }) {
+  const totalDuration = sumDuration(selected.services);
+  const totalPrice = sumPrice(selected.services);
+
   return (
     <div>
       <h2 className="text-xl font-bold text-text mb-4">Confirmar agendamento</h2>
       <div className="space-y-3 bg-primary rounded-xl p-4">
         <Row label="Barbeiro" value={selected.barber?.name} />
-        <Row label="Serviço" value={selected.service?.name} />
-        <Row label="Duração" value={`${selected.service?.durationMinutes} min`} />
+        <Row label="Serviços" value={formatServiceNames(selected.services)} />
+        <Row label="Duração" value={`${totalDuration} min`} />
         <Row label="Data" value={formatDate(selected.date)} />
         <Row label="Horário" value={selected.slot?.label} />
-        <Row label="Valor" value={`R$ ${selected.service?.price?.toFixed(2)}`} highlight />
+        <Row label="Valor" value={`R$ ${totalPrice.toFixed(2)}`} highlight />
         <p className="text-xs text-gray-500 pt-2">* Pagamento na barbearia</p>
       </div>
       <Button onClick={onConfirm} className="w-full mt-6" loading={submitting}>
@@ -366,10 +516,9 @@ function StepConfirm({ selected, onConfirm, submitting }) {
 
 function Row({ label, value, highlight }) {
   return (
-    <div className="flex justify-between">
-      <span className="text-gray-400">{label}</span>
-      <span className={highlight ? 'text-secondary font-bold' : 'text-text'}>{value}</span>
+    <div className="flex justify-between gap-4">
+      <span className="text-gray-400 shrink-0">{label}</span>
+      <span className={`text-right ${highlight ? 'text-secondary font-bold' : 'text-text'}`}>{value}</span>
     </div>
   );
 }
-
