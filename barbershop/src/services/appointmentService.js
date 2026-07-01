@@ -89,6 +89,30 @@ export async function getUpcomingAppointments(barberId, limit = 20) {
     .slice(0, limit);
 }
 
+/** Dados do dashboard admin — inclui hoje (todos os status) e próximos agendados. */
+export async function getDashboardData() {
+  const today = format(new Date(), DATE_FORMAT);
+  const { start, end } = getDayBounds(today);
+  const now = new Date();
+
+  const snap = await getDocs(collection(db, COLLECTION));
+  const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  const todayAppointments = all
+    .filter((a) => {
+      if (a.status === APPOINTMENT_STATUS.CANCELLED) return false;
+      const apptStart = toDate(a.startAt);
+      return apptStart >= start && apptStart <= end;
+    })
+    .sort((a, b) => toDate(a.startAt) - toDate(b.startAt));
+
+  const upcomingScheduled = all
+    .filter((a) => toDate(a.startAt) >= now && a.status === APPOINTMENT_STATUS.SCHEDULED)
+    .sort((a, b) => toDate(a.startAt) - toDate(b.startAt));
+
+  return { todayAppointments, upcomingScheduled };
+}
+
 export async function getAvailableSlots({ barberId, dateStr, serviceDurationMinutes }) {
   const duration = Number(serviceDurationMinutes);
   if (!duration || duration <= 0) {

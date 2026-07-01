@@ -1,33 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Calendar, Users, Clock, CheckCircle, Database } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { getUpcomingAppointments } from '../../services/appointmentService';
+import { getDashboardData } from '../../services/appointmentService';
 import { hasBookingData, seedInitialData } from '../../services/seedService';
 import { APPOINTMENT_STATUS } from '../../constants';
-import { formatTime, toDate } from '../../utils/dateUtils';
+import { formatTime } from '../../utils/dateUtils';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Loading from '../../components/ui/Loading';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
 
 export default function Dashboard() {
-  const [appointments, setAppointments] = useState([]);
+  const location = useLocation();
+  const [todayAppointments, setTodayAppointments] = useState([]);
+  const [upcomingScheduled, setUpcomingScheduled] = useState([]);
   const [loading, setLoading] = useState(true);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [seeding, setSeeding] = useState(false);
 
-  useEffect(() => {
-    Promise.all([
-      getUpcomingAppointments(null, 50).catch(() => []),
-      hasBookingData().catch(() => false),
-    ])
-      .then(([appts, hasData]) => {
-        setAppointments(appts);
-        setNeedsSetup(!hasData);
-      })
-      .finally(() => setLoading(false));
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [data, hasData] = await Promise.all([
+        getDashboardData(),
+        hasBookingData().catch(() => false),
+      ]);
+      setTodayAppointments(data.todayAppointments);
+      setUpcomingScheduled(data.upcomingScheduled);
+      setNeedsSetup(!hasData);
+    } catch (err) {
+      console.error('Erro ao carregar dashboard:', err);
+      toast.error('Erro ao carregar o dashboard.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard, location.key]);
 
   const handleSeed = async () => {
     setSeeding(true);
@@ -44,6 +57,7 @@ export default function Dashboard() {
         toast.success('Dados já existem no sistema.');
         setNeedsSetup(false);
       }
+      await loadDashboard();
     } catch (err) {
       console.error(err);
       toast.error('Erro ao configurar. Verifique se seu usuário é admin no Firestore.');
@@ -52,11 +66,13 @@ export default function Dashboard() {
     }
   };
 
-  const today = format(new Date(), 'yyyy-MM-dd');
-  const todayAppointments = appointments.filter(
-    (a) => format(toDate(a.startAt), 'yyyy-MM-dd') === today && a.status === APPOINTMENT_STATUS.SCHEDULED
+  const scheduledToday = todayAppointments.filter(
+    (a) => a.status === APPOINTMENT_STATUS.SCHEDULED
   );
-  const scheduled = appointments.filter((a) => a.status === APPOINTMENT_STATUS.SCHEDULED);
+  const completedToday = todayAppointments.filter(
+    (a) => a.status === APPOINTMENT_STATUS.COMPLETED
+  );
+  const clientsToday = new Set(todayAppointments.map((a) => a.clientId)).size;
 
   if (loading) return <Loading />;
 
@@ -88,10 +104,10 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard icon={Calendar} label="Hoje" value={todayAppointments.length} color="text-secondary" />
-        <StatCard icon={Clock} label="Próximos" value={scheduled.length} color="text-blue-400" />
-        <StatCard icon={Users} label="Clientes hoje" value={new Set(todayAppointments.map((a) => a.clientId)).size} color="text-green-400" />
-        <StatCard icon={CheckCircle} label="Concluídos" value={appointments.filter((a) => a.status === APPOINTMENT_STATUS.COMPLETED).length} color="text-gray-400" />
+        <StatCard icon={Calendar} label="Hoje" value={scheduledToday.length} color="text-secondary" />
+        <StatCard icon={Clock} label="Próximos" value={upcomingScheduled.length} color="text-blue-400" />
+        <StatCard icon={Users} label="Clientes hoje" value={clientsToday} color="text-green-400" />
+        <StatCard icon={CheckCircle} label="Concluídos" value={completedToday.length} color="text-gray-400" />
       </div>
 
       <div className="bg-card rounded-2xl border border-gray-800 p-4 sm:p-6">
