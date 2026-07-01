@@ -6,9 +6,8 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  query,
-  where,
   orderBy,
+  query,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -16,13 +15,11 @@ import { db } from '../config/firebase';
 const COLLECTION = 'services';
 
 export async function getActiveServices() {
-  const q = query(
-    collection(db, COLLECTION),
-    where('active', '==', true),
-    orderBy('order', 'asc')
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(collection(db, COLLECTION));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .filter((s) => s.active !== false)
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 }
 
 export async function getAllServices() {
@@ -39,7 +36,7 @@ export async function getServiceById(id) {
 export async function createService(data) {
   const ref = await addDoc(collection(db, COLLECTION), {
     ...data,
-    active: true,
+    active: data.active ?? true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });

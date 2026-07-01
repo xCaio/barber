@@ -10,6 +10,7 @@
     "preview": "vite build && vite preview",
     "firebase:deploy": "npm run build && firebase deploy",
     "firebase:rules": "firebase deploy --only firestore:rules",
+    "firebase:indexes": "firebase deploy --only firestore:indexes",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },

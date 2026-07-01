@@ -17,40 +17,29 @@ Sem isso o cadastro retorna: *"Login por e-mail não está ativado no Firebase C
 
 ## 3. Publicar regras de segurança
 
-### Opção A — Pelo Console (mais fácil, sem CLI)
+**Importante:** rode os comandos na pasta `barbershop` (onde está o `firebase.json`), não na pasta pai `barber`.
 
-1. Firebase Console → **Firestore Database** → aba **Regras**
-2. Copie o conteúdo do arquivo `firestore.rules` deste projeto
-3. Cole no editor e clique em **Publicar**
-
-### Opção B — Pelo terminal (Firebase CLI)
-
-Se aparecer *"Invalid project selection"* ou *"Failed to list Firebase projects"*:
+O projeto já está vinculado em `.firebaserc` com ID **`barbershop-c9294`**.
 
 ```bash
-firebase logout
-firebase login --reauth
-firebase projects:list
-```
-
-O comando `projects:list` mostra o **Project ID real** (pode ser diferente do nome exibido).
-
-Depois:
-
-```bash
-firebase use SEU_PROJECT_ID_REAL
+cd d:\barber\barbershop
+firebase login
+firebase use barbershop-c9294
 npm run firebase:rules
 ```
 
-> **Importante:** `firebase login` dizendo "Already logged in" **não garante** que o token está válido. Se `projects:list` falhar, faça `logout` + `login --reauth`.
+### Erro "Invalid project selection"?
 
-Sem regras publicadas, o cadastro falha com: *"Permissão negada no Firestore"*.
+| Causa | Solução |
+|-------|---------|
+| ID errado (`barbearia-c9294`) | Use **`barbershop-c9294`** (com "shop", não "bearia") |
+| Pasta errada | Entre em `d:\barber\barbershop` antes do comando |
+| Conta Google diferente | `firebase logout` → `firebase login` com a conta do Console |
+| Projeto não vinculado | `firebase use --add` e escolha **barbershop** na lista |
 
-### Como achar o Project ID correto
+Liste seus projetos: `firebase projects:list`
 
-Console → ⚙️ **Configurações do projeto** → campo **ID do projeto** (ex: `barbershop-c9294`).
-
-Deve ser **igual** ao `VITE_FIREBASE_PROJECT_ID` no `.env`.
+Sem publicar as regras, o cadastro falha com: *"Permissão negada no Firestore"*.
 
 ## 4. Reiniciar o app
 
@@ -58,7 +47,15 @@ Deve ser **igual** ao `VITE_FIREBASE_PROJECT_ID` no `.env`.
 npm run dev
 ```
 
-## 5. Tornar-se admin (opcional)
+## 5. Cadastrar Thiago Garcia e serviços
+
+1. No Firestore, abra `users/{seu-uid}` e altere **`role`** para `admin`
+2. Acesse **`/admin`** no site
+3. Clique em **"Configurar barbearia agora"**
+
+Isso cadastra o barbeiro **Thiago Garcia** e os 6 serviços. Sem isso, `/agendar` não mostra barbeiros.
+
+## 6. Tornar-se admin (resumo)
 
 Após criar sua conta, no Firestore Console:
 

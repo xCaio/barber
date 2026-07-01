@@ -1,22 +1,54 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Users, Clock, CheckCircle } from 'lucide-react';
+import { Calendar, Users, Clock, CheckCircle, Database } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getUpcomingAppointments } from '../../services/appointmentService';
+import { hasBookingData, seedInitialData } from '../../services/seedService';
 import { APPOINTMENT_STATUS } from '../../constants';
 import { formatTime, toDate } from '../../utils/dateUtils';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Loading from '../../components/ui/Loading';
+import Button from '../../components/ui/Button';
+import toast from 'react-hot-toast';
 
 export default function Dashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [needsSetup, setNeedsSetup] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
-    getUpcomingAppointments(null, 50)
-      .then(setAppointments)
+    Promise.all([
+      getUpcomingAppointments(null, 50).catch(() => []),
+      hasBookingData().catch(() => false),
+    ])
+      .then(([appts, hasData]) => {
+        setAppointments(appts);
+        setNeedsSetup(!hasData);
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      const result = await seedInitialData();
+      if (result.barber || result.services > 0) {
+        toast.success(
+          `Configurado: ${result.barber ? result.barber : ''}${result.services ? ` + ${result.services} serviços` : ''}`
+        );
+        setNeedsSetup(false);
+      } else {
+        toast.success('Dados já existem no sistema.');
+        setNeedsSetup(false);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao configurar. Verifique se seu usuário é admin no Firestore.');
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const todayAppointments = appointments.filter(
@@ -32,6 +64,24 @@ export default function Dashboard() {
       <p className="text-gray-400 mb-8 capitalize">
         {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
       </p>
+
+      {needsSetup && (
+        <div className="mb-8 p-6 bg-secondary/10 border border-secondary rounded-2xl">
+          <div className="flex items-start gap-4">
+            <Database className="text-secondary shrink-0 mt-1" size={28} />
+            <div className="flex-1">
+              <h2 className="font-bold text-text text-lg mb-2">Configuração inicial</h2>
+              <p className="text-gray-400 text-sm mb-4">
+                Cadastre o barbeiro <strong className="text-text">Thiago Garcia</strong> e os serviços da barbearia
+                para liberar o agendamento online.
+              </p>
+              <Button onClick={handleSeed} loading={seeding}>
+                Configurar barbearia agora
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard icon={Calendar} label="Hoje" value={todayAppointments.length} color="text-secondary" />

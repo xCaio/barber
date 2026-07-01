@@ -32,14 +32,30 @@ export default function Booking() {
     slot: null,
   });
 
+  const [loadError, setLoadError] = useState(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [b, s] = await Promise.all([getActiveBarbers(), getActiveServices()]);
+      setBarbers(b);
+      setServices(s);
+      if (!b.length) {
+        setLoadError('Nenhum barbeiro cadastrado. Peça ao administrador para configurar a barbearia.');
+      } else if (!s.length) {
+        setLoadError('Nenhum serviço cadastrado. Peça ao administrador para configurar os serviços.');
+      }
+    } catch (err) {
+      console.error('Erro ao carregar agendamento:', err);
+      setLoadError('Não foi possível carregar barbeiros e serviços. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    Promise.all([getActiveBarbers(), getActiveServices()])
-      .then(([b, s]) => {
-        setBarbers(b);
-        setServices(s);
-      })
-      .catch(() => toast.error('Erro ao carregar dados.'))
-      .finally(() => setLoading(false));
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -128,6 +144,12 @@ export default function Booking() {
         </div>
 
         <div className="bg-card rounded-2xl border border-gray-800 p-6">
+          {loadError && (
+            <div className="mb-4 p-4 rounded-xl bg-red-900/30 border border-red-800 text-red-200 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span>{loadError}</span>
+              <Button size="sm" variant="secondary" onClick={loadData}>Tentar novamente</Button>
+            </div>
+          )}
           {step === 0 && (
             <StepBarber
               barbers={barbers}
