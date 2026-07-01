@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import Loading from '../components/ui/Loading';
+import SectionHeading from '../components/SectionHeading';
+import RevealOnScroll from '../components/RevealOnScroll';
 import { getActiveServices } from '../services/serviceService';
 
 const SERVICE_IMAGES = {
@@ -53,30 +55,34 @@ export default function NossosServicos() {
   }, []);
 
   return (
-    <section id="servicos" className="pt-12 bg-primary w-full px-4">
-      <div className="flex flex-col text-center mb-10">
-        <h2 className="text-4xl sm:text-4xl md:text-6xl font-bold text-secondary pb-4">
-          Nossos Serviços
-        </h2>
-        <p className="text-lg sm:text-2xl md:text-4xl font-bold text-text">
-          Oferecemos uma gama completa de serviços para cuidar do seu estilo com
-          maestria
-        </p>
-      </div>
+    <section id="servicos" className="pt-12 sm:pt-16 pb-10 sm:pb-12 bg-primary w-full px-4 sm:px-6 relative overflow-hidden">
+      <div
+        className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,rgba(189,26,26,0.06)_0%,transparent_50%)]"
+        aria-hidden="true"
+      />
 
-      {loading ? (
-        <Loading message="Carregando serviços..." />
-      ) : services.length === 0 ? (
-        <p className="text-center text-gray-400 pb-12">
-          Serviços em breve. O administrador pode configurá-los no painel.
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-          {services.map((service) => (
-            <Card key={service.id} item={toCardItem(service)} />
-          ))}
-        </div>
-      )}
+      <div className="relative z-10 max-w-6xl mx-auto w-full">
+        <SectionHeading
+          title="Nossos Serviços"
+          subtitle="Oferecemos uma gama completa de serviços para cuidar do seu estilo com maestria"
+        />
+
+        {loading ? (
+          <Loading message="Carregando serviços..." />
+        ) : services.length === 0 ? (
+          <RevealOnScroll>
+            <p className="text-center text-gray-400 pb-10 sm:pb-12 text-sm sm:text-base px-2">
+              Serviços em breve. O administrador pode configurá-los no painel.
+            </p>
+          </RevealOnScroll>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full pb-6 sm:pb-8">
+            {services.map((service, index) => (
+              <Card key={service.id} item={toCardItem(service)} index={index} />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
